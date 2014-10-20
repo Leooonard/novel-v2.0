@@ -1,0 +1,41 @@
+<html>       
+	<head>                
+		<meta  charset="utf-8">                
+		<title>动态路由配置实验</title>  
+		<link rel="stylesheet" type="text/css" href="/media/css/bootstrap.css">  
+		<link rel="stylesheet" type="text/css" href="/media/css/novel.css">
+		<script type="text/javascript" src= "/media/script/jquery-1.10.2.min.js"></script>
+		<script type="text/javascript" src= "/media/script/model.js"></script>  
+		<script type="text/javascript" src= "/media/script/view.js"></script>  
+		<script type="text/javascript" src= "/media/script/util.js"></script>  
+		<script type="text/javascript" src= "/media/script/controller.js"></script>  
+		<style type="text/css"> 
+			.labContainer{
+				width: 1000px;
+				height: 600px;
+				background-color: white;
+				outline: 1px solid red;
+			}
+		</style>   
+		<script type="text/javascript">   
+			$(document).ready(function(){
+				var $labContainer= $(".labContainer");
+				novelController.bindContainer($labContainer);
+				var $createDevice= $("#createDevice");
+				$createDevice.click(function(){
+					var routeModel= new novelModel.route();
+					var routeView= new novelView.route();
+					routeView.setStyle({
+						'left': '100px',
+						'top': '200px'
+					});
+					novelController.createDevice(routeModel, routeView);
+				});
+			});
+		</script>                      
+	</head>        
+	<body>
+		<div class= 'labContainer'></div>
+		<button class= 'btn btn-primary' id= 'createDevice'>创建设备</button>
+    </body>
+</html>
