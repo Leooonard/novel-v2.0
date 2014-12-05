@@ -5,6 +5,7 @@
 		<link rel="stylesheet" type="text/css" href="/media/css/bootstrap.css">  
 		<link rel="stylesheet" type="text/css" href="/media/css/novel.css">
 		<script type="text/javascript" src= "/media/script/jquery-1.10.2.min.js"></script>
+		<script type="text/javascript" src= "/media/script/bootstrap.js"></script>
 		<script type="text/javascript" src= "/media/script/model.js"></script>  
 		<script type="text/javascript" src= "/media/script/view.js"></script>  
 		<script type="text/javascript" src= "/media/script/util.js"></script>  
@@ -37,5 +38,57 @@
 	<body>
 		<div class= 'labContainer'></div>
 		<button class= 'btn btn-primary' id= 'createDevice'>创建设备</button>
+
+
+		<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+			<div class="panel panel-default">
+				<div class="panel-heading" role="tab" id="headingOne" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+				      Collapsible Group Item #1
+				</div>
+				<div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+					<div class="panel-body">
+						<div class= "panel panel-info">
+							<div class= "panel-heading">
+								网卡名:
+							</div>
+							<div class="form-inline panel-body">
+							  <div class="form-group col-md-4">
+							    <label for="exampleInputEmail2">IP地址:</label>
+							    <input type="email" class="form-control" id="exampleInputEmail2" placeholder="IP地址(如192.168.0.1)">
+							  </div>
+							  <div class="form-group col-md-4">
+							      <label>子网掩码:</label>
+							      <input class="form-control" type="text" placeholder="子网掩码(如255.255.255.0)">
+							  </div>
+							  <div class="form-group col-md-4">
+							    <label for="exampleInputPassword2">目标地址:</label>
+							    <input type="password" class="form-control" id="exampleInputPassword2" placeholder="目标地址(如192.168.0.0)">
+							  </div>
+							</div>
+							<button class= "btn btn-info" data-toggle= "collapse" data-target= "#demo" aria-expanded="true" aria-controls="demo">展开路由表</button>
+							<div id= "demo" class= "panel-collapse collapse in">
+								<div class= "panel panel-warning">
+									<div class= "panel-heading">路由表</div>
+									<div class="form-inline panel-body">
+									  <div class="form-group col-md-4">
+									    <label for="exampleInputEmail2">IP地址:</label>
+									    <input type="email" class="form-control" id="exampleInputEmail2" placeholder="IP地址(如192.168.0.1)">
+									  </div>
+									  <div class="form-group col-md-4">
+									      <label>子网掩码:</label>
+									      <input class="form-control" type="text" placeholder="子网掩码(如255.255.255.0)">
+									  </div>
+									  <div class="form-group col-md-4">
+									    <label for="exampleInputPassword2">目标地址:</label>
+									    <input type="password" class="form-control" id="exampleInputPassword2" placeholder="目标地址(如192.168.0.0)">
+									  </div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
     </body>
 </html>

@@ -1,6 +1,6 @@
 .novelRouteView{
-	width: 100px;
-	height: 100px;
+	width: 80;
+	height: 80;
 	background-color: #4C4C4B;
 	border-radius: 3px;
 	position: absolute;
@@ -31,7 +31,7 @@
 	margin: 0px;
 	text-align: center;
 	height: 17.4%;
-	font-size: 100%;
+	font-size: 80%;
 	background-color: white;
 }
 

@@ -72,6 +72,242 @@
 
 
 	var novelView= {
+		physicalLayer: function(){
+			/*
+				物理层将不集成到设备中, 物理层将集成到网线中.
+				物理层可以选择物理层种类, 物理层的带宽, 传播延迟.
+				在视图中, 物理层对象的作用是显示具体的html元素, 让用户选择.
+				并且视图中的物理层需要提供一个接口, 让模型中的物理层进行调用, 获取最后的物理层属性.
+				视图中需要存在多种物理层结构, 因不同种类的物理层结构, 其显示样式不同.
+			*/
+
+			//点对点结构的物理层.
+			var CreateKnownTypePhysicalLayerHtmlView= function(name, bindWidth, delay){
+				/*
+					针对已经确定类型的物理层, 返回其jquery对象. 显示时, 使用p来显示物理层类型.
+					函数接受名字, 返回一个jquery对象. 接受带宽, 默认为空. 接受延迟, 默认为空.
+				*/
+				var bindWidth= bindWidth|| "";
+				var delay= delay|| "";
+				return $("\
+							<div class='form-group'>\
+								<label for='physicalLayerType' class='col-sm-3 control-label'>\
+									物理层类型:\
+								</label>\
+								<div class='col-sm-9'>\
+									<p class='form-control' id= 'physicalLayerType'>"+ name+ "</p>\
+								</div>\
+							</div>\
+							<div class='form-group'>\
+								<label for='physicalLayerType' class='col-sm-3 control-label'>\
+									物理层带宽:\
+								</label>\
+								<div class='col-sm-3'>\
+									<input type= 'text' class='form-control' id= 'physicalLayerBindWidth' val= '"+ bindWidth+ "'/>\
+								</div>\
+								<label for='physicalLayerType' class='col-sm-3 control-label'>\
+									物理层延迟:\
+								</label>\
+								<div class='col-sm-3'>\
+									<input type= 'text' class='form-control' id= 'physicalLayerDelay' val= '"+ delay+ "'/>\
+								</div>\
+							</div>\
+						");	
+ 			};
+ 			var physicalLayerDict= {
+ 				"p2pPhysicalLayer": "点对点结构物理层",
+ 				"busPhysicalLayer": "总线结构物理层"
+ 			};
+
+ 			/*
+ 				物理层数据结构.
+	 			physicalLayerInfo= {
+	 				"type": "",
+	 				"bindWidth": "",
+	 				"delay": ""
+	 			};
+			*/
+ 			//点对点结构的物理层.
+			var p2pPhysicalLayer= function(){
+				var name= "点对点结构物理层";
+				var $htmlView= CreateKnownTypePhysicalLayerHtmlView(name);
+				this.getPhysicalLayerInfo= function(){
+					return {
+						"type": "p2p",
+						"bindWidth": $htmlView.find("#physicalLayerBindWidth").val().toString(),
+						"delay": $htmlView.find("#physicalLayerDelay").val().toString()
+					}
+				};
+			};
+			//总线结构的物理层.
+			var busPhysicalLayer= function(){
+				var name= "总线结构物理层";
+				var $htmlView= CreateKnownTypePhysicalLayerHtmlView(name);
+				this.getPhysicalLayerInfo= function(){
+					return {
+						"type": "bus",
+						"bindWidth": $htmlView.find("#physicalLayerBindWidth").val().toString(),
+						"delay": $htmlView.find("#physicalLayerDelay").val().toString()
+					}
+				};
+			};
+			//未知结构的物理层类型, 需要用户手动去选择.
+			var unknownPhysicalLayer= function(){
+				var name= "未知结构物理层";
+				var optionView= "";
+				for(var key in physicalLayerDict){
+					optionView+= "<option val= '"+ key+ "'>"+ physicalLayerDict[key]+ "</option>"
+				}
+				var $htmlView= $("\
+					<div class='form-group'>\
+						<label for='physicalLayerType' class='col-sm-3 control-label'>\
+							物理层类型:\
+						</label>\
+						<div class='col-sm-9'>\
+							<select class='form-control' id= 'physicalLayerType'>"+ optionView+ "</select>\
+						</div>\
+					</div>\
+					<div class='form-group'>\
+						<label for='physicalLayerType' class='col-sm-3 control-label'>\
+							物理层带宽:\
+						</label>\
+						<div class='col-sm-3'>\
+							<input type= 'text' class='form-control' id= 'physicalLayerBindWidth' val= '"+ bindWidth+ "'/>\
+						</div>\
+						<label for='physicalLayerType' class='col-sm-3 control-label'>\
+							物理层延迟:\
+						</label>\
+						<div class='col-sm-3'>\
+							<input type= 'text' class='form-control' id= 'physicalLayerDelay' val= '"+ delay+ "'/>\
+						</div>\
+					</div>\
+				");	
+				this.getPhysicalLayerInfo= function(){
+					return {
+						"type": $htmlView.find("physicalLayerType").val().toString(),
+						"bindWidth": $htmlView.find("#physicalLayerBindWidth").val().toString(),
+						"delay": $htmlView.find("#physicalLayerDelay").val().toString()
+					}
+				};
+			};
+		},
+		NetworkLayer: function(){
+			/*
+				网络层将集成到设备中. 网络层目前将默认使用主流的IPv4协议.(IPv6协议可以考虑后期加入)
+				网络层对于不同的设备将显示不同的元素, 可分为主机设备, 路由设备两种.
+				在视图中, 网络层对象的作用是显示一个具体的html元素, 让用户选择.
+				视图需要实现一个接口, 导出html元素中的数据, 返还至模型.
+			*/
+
+			var hostIPv4NetworkLayer= function(networkAdapterInfo){
+				/*
+					IPv4协议下的主机设备网络层.
+					需要提供一个输入, 说明该主机网卡的情况, 包括网卡的数量(靠数组长度提供), 网卡连接的网段的名字, 网卡已存的信息.
+					(每张网卡将对应一个IP, 子网掩码, 默认路由)
+
+					networkAdapterInfo= [{
+						"name": "", 网卡名字
+						"ipAddress": "", 网卡对应的IP地址
+						"maskAddress": "", 网卡对应的子网掩码
+						"targetRouteAddress": "" 网卡对应的目标路由地址
+					}, ...];
+				*/
+				var name= "IPv4主机网络层";
+				var htmlView= "";
+				var $htmlView= $("<div class= 'networkLayerWrapper'></div>");
+
+				for(var i= 0; i< networkAdapterInfo.length; i++){
+					var adapter= networkAdapterInfo[i];
+					var name= adapter.name|| "";
+					var ipAddress= adapter.ipAddress|| "";
+					var maskAddress= adapter.maskAddress|| "";
+					var targetRouteAddress= adapter.targetRouteAddress|| "";
+					$htmlView.append();
+					htmlView+= "\
+						\
+							<div class='form-group'>\
+								<label for='netWorkLayerAdapter"+ name+ "' class='col-sm-3 control-label'>\
+									网段名:\
+								</label>\
+								<div class='col-sm-9'>\
+									<p class='form-control' id= 'netWorkLayerAdapter"+ name+ "'>"+ name+ "</p>\
+								</div>\
+							</div>\
+							<div class='form-group'>\
+								<label for='netWorkLayerAdapter"+ name+ "ipAddress"+ "' class='col-sm-3 control-label'>\
+									IP地址:\
+								</label>\
+								<div class='col-sm-9'>\
+									<input type= 'text' class='form-control' id= 'netWorkLayerAdapter"+ name
+									+ "ipAddress"+ "' val= '"+ ipAddress+ "'/>
+								</div>\
+							</div>\
+							<div class='form-group'>\
+								<label for='netWorkLayerAdapter"+ name+ "maskAddress"+ "' class='col-sm-3 control-label'>\
+									子网掩码:\
+								</label>\
+								<div class='col-sm-9'>\
+									<input type= 'text' class='form-control' id= 'netWorkLayerAdapter"+ name
+									+ "maskAddress"+ "' val= '"+ maskAddress+ "'/>
+								</div>\
+							</div>\
+							<div class='form-group'>\
+								<label for='netWorkLayerAdapter"+ name+ "targetRouteAddress"+ "' class='col-sm-3 control-label'>\
+									目标路由:\
+								</label>\
+								<div class='col-sm-9'>\
+									<input type= 'text' class='form-control' id= 'netWorkLayerAdapter"+ name
+									+ "targetRouteAddress"+ "' val= '"+ targetRouteAddress+ "'/>
+								</div>\
+							</div>\
+						</div>\
+					";
+				}
+
+				var $htmlView= $(htmlView);
+
+				this.getNetworkLayerInfo= function(){
+					var info= [];
+					var $wrapperContainer= $htmlView.find(".networkLayerWrapper")
+					for(var i= 0; i< $wrapperContainer.length; i++){
+						var $wrapper= $($wrapperContainer.get(i));
+						info.push({
+							"name": $($wrapper.find(".form-control").get(0)).val(),
+							"ipAddress": $($wrapper.find(".form-control").get(1)).val(),
+							"maskAddress": $($wrapper.find(".form-control").get(2)).val(),
+							"targetRouteAddress": $($wrapper.find(".form-control").get(3)).val()
+						});
+					}
+					return info;
+				};
+			};
+
+			var routeIPv4NetworkLayer= function(networkAdapterInfo){
+				/*
+					IPv4协议下的路由设备网络层.
+					需要提供一个输入, 说明该路由网卡的情况, 包括网卡的数量(靠数组长度提供), 网卡连接的网段的名字, 网卡已存的信息.
+					(每张网卡将对应一个IP, 子网掩码, 一个路由表)
+
+					networkAdapterInfo= [{
+						"name": "", 网卡名字
+						"ipAddress": "", 网卡对应的IP地址
+						"maskAddress": "", 网卡对应的子网掩码
+						"routeTable": [{ 网卡对应的路由表
+							"targetRouteAddress": "", 目标路由地址
+							"maskAddress": "", 子网掩码
+							"nextSkipAddress": "" 下一跳地址
+						}, ...]
+					}, ...];
+				*/
+
+				var name= "IPv4路由网络层"
+				var htmlView= "";
+
+				for(var i= 0; i< networkAdapterInfo.length; i++){
+					var adapter= networkAdapterInfo[i];
+				}
+			};
+		},
 		route: function(){
 			var ID= undefined; //唯一的标示符.
 			var viewName= undefined; //表示设备的名字.
@@ -240,7 +476,7 @@
 					}else if(event.which== 3){
 						//右键点击事件. 应该要创造链接. 需要通知控制器.
 					}
-				}
+				};
 				var wrapperMouseMove= function(e, mouseDownPointer){
 					var event= e|| window.event;
 					var $this= $(this);
@@ -251,12 +487,28 @@
 					};
 					var left= parseInt($parent.css('left'));
 					var top= parseInt($parent.css('top'));
+
+					//首先先要解除对象的click事件绑定, 因为对象移动了.
+					$this.unbind("click");
+
 					$parent.css('left', (left+ nowPointer.x- mouseDownPointer.x)+ 'px');
 					$parent.css('top', (top+ nowPointer.y- mouseDownPointer.y)+ 'px');
 					mouseDownPointer.x= nowPointer.x;
 					mouseDownPointer.y= nowPointer.y;
 				};
-
+				var wrapperClick= function(e){
+					var event= e|| window.event;
+					var $this= $(this);
+					$this.unbind('mousemove');
+					$novelRouteView.unbind("mousemove");
+					$novelRouteView.css("cursor", "Crosshair");
+					ControllerInterface.restoreMoveCallback();
+					if(event.which== 1){
+						//是左键点击事件应该通知controller. 由controller接管, 调出配置div.
+						ControllerInterface.deviceClickCallback(ID);
+					}
+					return false;
+				};
 
 				//使用object使其成为可变对象, 通过传入函数即可改变自身.
 				var mouseDownPointer= { 
@@ -291,6 +543,10 @@
 				var $wrapper= $htmlView.find(".wrapper");
 				$wrapper.mousedown(function(e){
 					var $this= $(this);
+					//这里先解绑click, 再重新绑. 因为移动后会解绑click, 所以需要重新绑定.
+					//先解绑是因为上次操作可能不触发mousemove, 防止注册多个重复click事件.
+					$this.unbind("click");
+					$this.click(wrapperClick);
 					wrapperMouseDown.call($this, e, mouseDownPointer);
 					return false;
 				});
@@ -300,19 +556,6 @@
 					$novelRouteView.unbind("mousemove");
 					$novelRouteView.css("cursor", "Crosshair");
 					ControllerInterface.restoreMoveCallback();
-					return false;
-				});
-				$wrapper.click(function(e){
-					var event= e|| window.event;
-					var $this= $(this);
-					$this.unbind('mousemove');
-					$novelRouteView.unbind("mousemove");
-					$novelRouteView.css("cursor", "Crosshair");
-					ControllerInterface.restoreMoveCallback();
-					if(event.which== 1){
-						//是左键点击事件应该通知controller. 由controller接管, 调出配置div.
-						ControllerInterface.deviceClickCallback(ID);
-					}
 					return false;
 				});
 			};
