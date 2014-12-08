@@ -689,6 +689,8 @@
                                    return false;
                               }else if(event.which== 3){
                                    //右键点击事件. 应该要创造链接. 需要通知控制器.
+                                   ControllerInterface.deviceRightClickCallback(event, ID);
+                                   return false;
                               }
                          };
                          var wrapperMouseMove= function(e, mouseDownPointer){
@@ -754,7 +756,6 @@
                               return false;
                          });
 
-                         var $wrapper= $htmlView.find(".wrapper");
                          $wrapper.mousedown(function(e){
                               var $this= $(this);
                               //这里先解绑click, 再重新绑. 因为移动后会解绑click, 所以需要重新绑定.
@@ -764,14 +765,45 @@
                               wrapperMouseDown.call($this, e, mouseDownPointer);
                               return false;
                          });
-                         $wrapper.mouseup(function(e){
+
+                         var wrapperMouseUp= function(e){
                               var $this= $(this);
                               $this.unbind('mousemove');
                               $novelRouteView.unbind("mousemove");
                               $novelRouteView.css("cursor", "Crosshair");
                               ControllerInterface.restoreMoveCallback();
                               return false;
-                         });
+                         };
+                         $wrapper.mouseup(wrapperMouseUp);
+                    };
+
+                    this.changeViewMouseUp= function(func){
+                        /*
+                            通过该函数, controller可以改变视图监听的mouseup事件函数.
+                        */
+                        $wrapper.unbind("mouseup");
+                        $wrapper.mouseup(func);
+                    };
+
+                    this.restoreViewMouseUp= function(){
+                        $wrapper.unbind("mouseup");
+                        $wrapper.mouseup(wrapperMouseUp);
+                    };
+
+                    this.getCenteralPosition= function(){
+                        /*
+                            该函数用于返回设备的中心位置坐标.
+                            返回值为对象. 对象包含x坐标, y坐标.
+                        */
+
+                        var left= parseInt($htmlView.css("left"));
+                        var top= parseInt($htmlView.css("top"));
+                        var width= parseInt($htmlView.css("width"));
+                        var height= parseInt($htmlView.css("height"));
+                        return {
+                            x: left+ width/ 2,
+                            y: top+ height/ 2
+                        }
                     };
 
                     var $htmlView= $(
@@ -783,7 +815,11 @@
                                    "</div>"+
                               "</div>"+
                          "</div>");
-               };  
+                    var $wrapper= $htmlView.find(".wrapper");
+               }; 
+               this.CreateRoute= function(){
+                    return new route();
+               }; 
           },
           Segement: function(){
                var cableSegement= function(){
@@ -795,6 +831,12 @@
 
                     var ID= undefined;
                     var viewName= undefined;
+
+                    //通过矩形对角顶点的两组坐标, 可以计算出矩形的左上角坐标, 矩形的高宽. 即线段容器的位置, 长宽信息.
+                    var originX= undefined, originY= undefined; //两个变量记录了视图的初始位置信息.
+                    var nowX= 0, nowY= 0; //两个变量记录了与初始位置信息相对的另一个顶点的位置信息.
+
+                    var strokeWidth= 1; //canvas中画笔的宽度.
 
                     this.getID= function(){
                          return ID;
@@ -810,8 +852,119 @@
                     };
 
                     var $htmlView= $(
-                         ""
+                        "<div class= 'novelSegement'>"+
+                            "<canvas></canvas>"+
+                        "</div>"
                     );
+                    var context= $htmlView.find("canvas").get(0).getContext("2d");
+
+                    this.getHtmlView= function(){
+                        return $htmlView;
+                    };
+
+                    this.removeHtmlView= function(){
+                        $htmlView.remove();
+                    };
+
+                    var caculateNewPosition= function(){
+                        /*
+                            调用函数后, 根据两个位置坐标更新图形的位置信息, 长宽信息.
+                            一般在调用setPosition后, 使用该函数.
+                        */
+
+                        var width= nowX- originX;
+                        var height= nowY- originY;
+                        if(width< 0){
+                            //对角坐标在原始坐标左面时, 需要移动矩形的左上角位置.
+                            $htmlView.css("left", nowX);
+                            $htmlView.css("width", Math.abs(width));
+                            $htmlView.find("canvas").attr("width", Math.abs(width));
+                        }else if(width== 0){
+                            //两点x坐标相同. 这种情况, 需要给canvas一个1px的宽度(), 并且设置两边的padding为10px.
+                            $htmlView.css("left", nowX- 10); //先左移10px.
+                            $htmlView.css("width", strokeWidth);
+                            $htmlView.css("padding", "0 10px");
+                            $htmlView.find("canvas").attr("width", strokeWidth);
+                        }else{
+                            $htmlView.css("width", width);
+                            $htmlView.find("canvas").attr("width", width);
+                        }
+                        if(height< 0){
+                            $htmlView.css("top", nowY);
+                            $htmlView.css("height", Math.abs(height));
+                            $htmlView.find("canvas").attr("height", Math.abs(height));
+                        }else if(height== 0){
+                            $htmlView.css("top", nowY- 10);
+                            $htmlView.css("height", strokeWidth);
+                            $htmlView.css("padding", "10px 0");
+                            $htmlView.find("canvas").attr("height", strokeWidth);
+                        }else{
+                            $htmlView.css("height", height);
+                            $htmlView.find("canvas").attr("height", height);
+                        }
+
+                        //然后更新canvas中的线段.
+                        updateCanvas();
+                    };
+
+                    var updateCanvas= function(){
+                        var width= nowX- originX;
+                        var height= nowY- originY;
+                        context.clearRect(0, 0, Math.abs(width), Math.abs(height));
+                        if(width> 0&& height< 0){
+                            context.moveTo(0, Math.abs(height));
+                            context.lineTo(Math.abs(width), 0);
+                        }else if(width< 0&& height> 0){   
+                            context.moveTo(Math.abs(width), 0);
+                            context.lineTo(0, Math.abs(height));
+                        }else{
+                            context.moveTo(0, 0);
+                            context.lineTo(Math.abs(width), Math.abs(height));
+                        }
+                        context.stroke();
+                    };
+
+                    this.moveOrigin= function(x, y){
+                        //用于改变原坐标位置. 算shortcut?  以后应该改善该函数. 应该把功能放入setPosition.
+                        if(x|| x=== 0){
+                            originX= x;
+                        }
+                        if(y|| y=== 0){
+                            originY= y;
+                        }
+                    };
+
+                    this.setPosition= function(x, y, update){
+                        /*
+                            update变量决定是否在设置完最新的坐标值后, 直接更新图形.
+                            四个坐标值, 如果为空, 则不更新.
+                        */
+
+                        //先验证参数的合法性. 再验证origin坐标是否已经赋值, 如果已经赋值, 以后的值都将赋给now坐标.
+                        if(x|| x=== 0){
+                            if(!originX&& originX!== 0){
+                                originX= x;
+                            }else{
+                                nowX= x;
+                            }
+                        }
+                        if(y|| y=== 0){
+                            if(!originY&& originY!== 0){
+                                originY= y;
+                            }else{
+                                nowY= y;
+                            }
+                        }
+
+                        console.log(originY);
+                        //设置完最新坐标后默认直接更新图形.
+                        if(update|| update=== null){
+                            caculateNewPosition();
+                        }
+                    };
+               };
+               this.CreateCableSegement= function(){
+                    return new cableSegement();
                };
           }
      };

@@ -38,11 +38,11 @@
 			*/
 
 			//物理层数据结构.
-			var physicalLayerInfo= {
-				"type": undefined，
-				"bindWidth": undefined，
-				"delay": undefined
-			};
+			// var physicalLayerInfo= {
+			// 	"type": undefined，
+			// 	"bindWidth": undefined，
+			// 	"delay": undefined
+			// };
 
 			this.setPhysicalLayerInfo= function(view){
 				physicalLayerInfo= view.getPhysicalLayerInfo();

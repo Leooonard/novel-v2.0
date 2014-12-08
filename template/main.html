@@ -53,7 +53,7 @@
                 var $createDevice= $("#createDevice");
                 $createDevice.click(function(){
                     var routeModel= new novelModel.route();
-                    var routeView= new novelView.route();
+                    var routeView= new novelView.Device().CreateRoute();
                     routeView.setStyle({
                         'left': '100px',
                         'top': '200px'
@@ -61,7 +61,7 @@
                     novelController.createDevice(routeModel, routeView);
                 });
 
-                var dialog= CreateFloatDetailedInfoDialog();
+                /*var dialog= CreateFloatDetailedInfoDialog();
                 var hostNetworkLayer= (new novelView.NetworkLayer()).createHostIPv4NetworkLayer();
                 var routeNetworkLayer= (new novelView.NetworkLayer()).createRouteIPv4NetworkLayer();
                 var physicalLayer= (new novelView.PhysicalLayer()).createP2PPhysicalLayer();
@@ -109,21 +109,19 @@
                          context.lineTo(Math.abs(width), Math.abs(height));
                     }
                     context.stroke();
-                    console.log("moving");
                 };
 
                 var $div= undefined;
                 var context= undefined;
                 var x= undefined, y= undefined;
 
-
                 $("#div1").mousedown(function(e){
-                    console.log("div1 mouse down");
                     var $this= $(this);
                     var event= e|| window.event;
                     x= event.pageX;
                     y= event.pageY;
                     $div= $("<div><canvas></canvas></div>");
+                    $div.css("padding", "10px");
                     context= $div.find("canvas").get(0).getContext("2d");
                     context.strokeStyle= "red";
                     $div.addClass("div");
@@ -140,18 +138,59 @@
                     return false;
                 });
                 $("#div2").mouseup(function(){
-                    console.log("div2 mouse up");
+                	var div1X= parseInt($("#div1").css("left"));
+                	var div1Y= parseInt($("#div1").css("top"));
+                	var div1Width= parseInt($("#div1").css("width"));
+                	var div1Height= parseInt($("#div1").css("height"));
+                	var div1cx= parseInt(div1X+ div1Width/ 2);
+                	var div1cy= parseInt(div1Y+ div1Height/ 2);
+                	var div2X= parseInt($("#div2").css("left"));
+                	var div2Y= parseInt($("#div2").css("top"));
+                	var div2Width= parseInt($("#div2").css("width"));
+                	var div2Height= parseInt($("#div2").css("height"));
+                	var div2cx= parseInt(div2X+ div2Width/ 2);
+                	var div2cy= parseInt(div2Y+ div2Height/ 2);
+                	console.log(div1cx+ " "+ div1cy+ " "+ div2cx+ " "+ div2cy);
+                	if(div1cx< div2cx){
+                		var left= div1cx;
+                	}else if(div1cx== div2cx){
+                		var left= div1cx;
+                	}else{
+                		var left= div2cx;
+                	}
+                	var width= div1cx- div2cx;
+                	if(div1cy< div2cy){
+                		var top= div2cy;
+                	}else if(div1cy== div2cy){
+                		var top= div1cy;
+                	}else{
+                		var top= div1cy;
+                	}
+                	var height= div1cy- div2cy;
+                	$div.css("left", left).css("top", top).css("width", Math.abs(width)).css("height", Math.abs(height));
+                    context.clearRect(0, 0, Math.abs(width), Math.abs(height));
+                    if(width> 0&& height< 0){
+                         context.moveTo(0, Math.abs(height));
+                         context.lineTo(Math.abs(width), 0);
+                    }else if(width< 0&& height> 0){   
+                         context.moveTo(Math.abs(width), 0);
+                         context.lineTo(0, Math.abs(height));
+                    }else{
+                         context.moveTo(0, 0);
+                         context.lineTo(Math.abs(width), Math.abs(height));
+                    }
+                    context.stroke();
                     $(document.body).unbind("mousemove");
                     return false;
-                });
+                });*/
             });
       </script>                      
       </head>        
      <body>
-          <div id= "div1" style= "width: 100px; height: 100px; position: absolute; left: 100px; top: 100px; background-color: green;">
+          <!-- <div id= "div1" style= "width: 100px; height: 100px; position: absolute; left: 100px; top: 100px; background-color: green;">
           </div>
-          <div id= "div2" style= "width: 100px; height: 100px; position: absolute; left: 300px; top: 100px; background: red;"></div>
-          <!-- <div class= 'labContainer'></div>
-          <button class= 'btn btn-primary' id= 'createDevice'>创建设备</button> -->
+          <div id= "div2" style= "width: 100px; height: 100px; position: absolute; left: 300px; top: 100px; background: red;"></div> -->
+          <div class= 'labContainer'></div>
+          <button class= 'btn btn-primary' id= 'createDevice'>创建设备</button>
      </body>
 </html>

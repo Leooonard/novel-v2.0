@@ -59,3 +59,8 @@
 	overflow: auto;
 	text-align: center;
 }
+
+.novelSegement{
+	outline: 1px solid red;
+	position: absolute;
+}

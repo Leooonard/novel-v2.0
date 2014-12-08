@@ -13,6 +13,7 @@
 	var modelIDArray= []; 
 	var modelArray= []; //这个数组存放了所有的已注册成功设备的模型.
 	var viewArray= []; //这个数组存放了所有的已注册成功设备的视图.
+	var rightClickPointer= undefined; //这个对象存放了当鼠标右击设备时的坐标.
 
 
 	var InterfaceForView= function(){
@@ -71,7 +72,6 @@
 			}
 
 			var $config= $configHtmlHead.clone(); //复制一个副本.
-			console.log($configHtmlHead);
 
 			/*
 				先从设备模型获取相应的网络信息, 网络信息放置于数组中, 使得信息有先后关系, 在前的则显示也在前.
@@ -110,13 +110,94 @@
 			$config.css('display', 'block');
 			$(document.body).append($config);
 		};
+		this.deviceRightClickCallback= function(e, ID){
+			/*
+				当设备自身被右击时, 需要调用该回调, 将控制权交给controller.
+				ID指被单击设备的ID号.
+			*/
+			var event= e|| window.event;
+
+			//创建零时的网段. 该对象是网段对象.
+			var $temporarySeg= createSegement(true);
+			$temporarySeg.setPosition(parseInt(event.pageX), parseInt(event.pageY), false);
+			$labContainer.append($temporarySeg.getHtmlView());
+
+			//然后接管mousemove事件.
+			$(document.body).mousemove(function(e){
+				var event= e|| window.event;
+				$temporarySeg.setPosition(parseInt(event.pageX), parseInt(event.pageY), true);
+			});
+
+			var restore= function(){
+				$(document.body).unbind("mousemove");
+				for(var i= 0; i< viewArray.length; i++){
+					viewArray.restoreViewMouseUp();
+				}
+			};
+
+			$(document.body).mouseup(function(e){
+				/*
+					没有在设备内抬起鼠标, 该线段需要删除.
+				*/
+				$temporarySeg.removeHtmlView();
+				//还原原来的抬起事件.
+				restore();
+				return false;
+			});
+
+			//改变设备的mouseup事件. 并且在body捕捉mouseup事件.(如果捕捉到, 说明没有在设备上放开, 不是有效的网段)
+			for(var i= 0; i< viewArray.length; i++){
+				viewArray[i].changeViewMouseUp(function(e){
+					/*
+						在设备内抬起了鼠标, 该线段需要保留.
+					*/
+
+					if(viewArray[i].getID()== ID){
+						//在原设备上放开了鼠标. 该线段需要删除.
+						$temporarySeg.removeHtmlView();
+						//还原原来的抬起事件.
+						restore();
+						return false;
+					}
+
+					//保留该线段的操作.
+					//先调整位置
+					for(var j= 0; j< viewArray.length; j++){
+						if(viewArray[j].compareID(ID)){ //是原始设备.
+							var centeralPosition= viewArray[j].getCenteralPosition();
+							$temporarySeg.moveOrigin(centeralPosition.x, centeralPosition.y);
+							centeralPosition= viewArray[i].getCenteralPosition();
+							$temporarySeg.setPosition(centeralPosition.x, centeralPosition.y, true);
+							break;
+						}
+					}
+
+					//还原原来的抬起事件.
+					restore();
+					return false;
+				});
+			}
+		};
 	};
 
 	var mouseMoveCallback= function(e){
 		return false;
 	}
 
-	var novelController= {
+	var createSegement= function(temporary){
+		/*
+			该函数用于创建网段.
+			输入temporary确定是否创建的是零时网段. 零时网段将只包含view, 不包含model以及id等具体信息.
+			需要返回一个网段对象.
+		*/
+		if(temporary|| temporary=== null ){ //temporary默认为true
+			var view= new novelView.Segement().CreateCableSegement();
+			return view;
+		}
+	};	
+
+
+	var novelController= {		
 		createDevice: function(model, view){
 			/*
 				函数用于创建一个设备, 并将设备ID添加至ID号列表中(ID是设备存在的证据).
