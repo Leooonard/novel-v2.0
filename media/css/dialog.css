@@ -1,0 +1,88 @@
+.absoluteCenter{
+    position: absolute;
+    margin: auto;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+}
+#FloatDetailedInfoDialog_resizeWrapper{
+     position: relative;
+     height: 0px;
+}
+.FloatDetailedInfoDialog_resizeBtn{
+    position: absolute;
+    display: block;
+    color: white;
+    font-weight: bolder;
+    cursor: pointer;
+}
+#FloatDetailedInfoDialog_maximizeBtn{
+    display: none;
+}
+.FloatDetailedInfoDialog{
+    display: none;
+    z-index: 1600;
+    background-color: white;
+}
+#FloatDetailedInfoDialog_title{
+    background-color: #08c;
+    color: white;
+    text-align: center;
+    cursor: move;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+#FloatDetailedInfoDialog_body{
+    background-color: white;
+    overflow: auto;
+}
+#FloatDetailedInfoDialog_footer{
+    background-color: white;
+    text-align: center;
+}
+.ModalConfirmDialog{
+    z-index: 2600;
+}      
+#ModalConfirmDialog_title{
+    background-color: #08c;
+    color: white;
+    text-align: center;
+}
+#ModalConfirmDialog_body{
+    background-color: white;
+    text-align: center;
+}
+#ModalConfirmDialog_footer{       
+    background-color: white;
+    text-align: center;
+}
+
+.ModalAlertDialog{
+    z-index: 2600;
+}      
+#ModalAlertDialog_title{
+    background-color: #08c;
+    color: white;
+    text-align: center;
+}
+#ModalAlertDialog_body{
+    background-color: white;
+    text-align: center;
+}
+#ModalAlertDialog_footer{       
+    background-color: white;
+    text-align: center;
+}
+
+.FullScreenMask{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: black;
+    opacity: 0.3;
+    z-index: 2500;
+}

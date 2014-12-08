@@ -1,94 +1,157 @@
 <html>       
-	<head>                
-		<meta  charset="utf-8">                
-		<title>动态路由配置实验</title>  
-		<link rel="stylesheet" type="text/css" href="/media/css/bootstrap.css">  
-		<link rel="stylesheet" type="text/css" href="/media/css/novel.css">
-		<script type="text/javascript" src= "/media/script/jquery-1.10.2.min.js"></script>
-		<script type="text/javascript" src= "/media/script/bootstrap.js"></script>
-		<script type="text/javascript" src= "/media/script/model.js"></script>  
-		<script type="text/javascript" src= "/media/script/view.js"></script>  
-		<script type="text/javascript" src= "/media/script/util.js"></script>  
-		<script type="text/javascript" src= "/media/script/controller.js"></script>  
-		<style type="text/css"> 
-			.labContainer{
-				width: 1000px;
-				height: 600px;
-				background-color: white;
-				outline: 1px solid red;
-			}
-		</style>   
-		<script type="text/javascript">   
-			$(document).ready(function(){
-				var $labContainer= $(".labContainer");
-				novelController.bindContainer($labContainer);
-				var $createDevice= $("#createDevice");
-				$createDevice.click(function(){
-					var routeModel= new novelModel.route();
-					var routeView= new novelView.route();
-					routeView.setStyle({
-						'left': '100px',
-						'top': '200px'
-					});
-					novelController.createDevice(routeModel, routeView);
-				});
-			});
-		</script>                      
-	</head>        
-	<body>
-		<div class= 'labContainer'></div>
-		<button class= 'btn btn-primary' id= 'createDevice'>创建设备</button>
+      <head>                
+      <meta  charset="utf-8">                
+      <title>动态路由配置实验</title>  
+      <link rel="stylesheet" type="text/css" href="/media/css/bootstrap.css">  
+      <link rel="stylesheet" type="text/css" href="/media/css/novel.css">
+      <link rel="stylesheet" type="text/css" href="/media/css/dialog.css">
+      <script type="text/javascript" src= "/media/script/jquery-1.10.2.min.js"></script>
+      <script type="text/javascript" src= "/media/script/bootstrap.js"></script>
+      <script type="text/javascript" src= "/media/script/model.js"></script>  
+      <script type="text/javascript" src= "/media/script/view.js"></script>  
+      <script type="text/javascript" src= "/media/script/util.js"></script>  
+      <script type="text/javascript" src= "/media/script/controller.js"></script>  
+      <script type="text/javascript" src= "/media/script/button-toggle.js"></script>
+      <script type="text/javascript" src= "/media/script/dialog.js"></script>
+      <style type="text/css"> 
+            .labContainer{
+                width: 1000px;
+                height: 600px;
+                background-color: white;
+                outline: 1px solid red;
+            }
+            .padding20{
+                padding: 20px;
+            }
+            .expand{
+                  color: rgb(66, 139, 202);
+                  margin: 10px 0px;
+                  display: inline-block;
+                  cursor: pointer;
+            }
+            .pointer{
+                  cursor: pointer;
+            }
+            .floatRight{
+                  float: right;
+            }
+            .marginRight20{
+                  margin-right: 20px;
+            }
+            .form-control{
+                width: 100% !important;
+            }
+            .div{
+               position: absolute;
+               outline: 1px solid red;
+            }
+      </style>   
+      <script type="text/javascript">   
+            $(document).ready(function(){
+                var $labContainer= $(".labContainer");
+                novelController.bindContainer($labContainer);
+                var $createDevice= $("#createDevice");
+                $createDevice.click(function(){
+                    var routeModel= new novelModel.route();
+                    var routeView= new novelView.route();
+                    routeView.setStyle({
+                        'left': '100px',
+                        'top': '200px'
+                    });
+                    novelController.createDevice(routeModel, routeView);
+                });
+
+                var dialog= CreateFloatDetailedInfoDialog();
+                var hostNetworkLayer= (new novelView.NetworkLayer()).createHostIPv4NetworkLayer();
+                var routeNetworkLayer= (new novelView.NetworkLayer()).createRouteIPv4NetworkLayer();
+                var physicalLayer= (new novelView.PhysicalLayer()).createP2PPhysicalLayer();
+                var $div= $("<div></div>");
+                $div.append(routeNetworkLayer.getHtmlView()).append(physicalLayer.getHtmlView());
+                dialog.config({
+                    "title": "设备",
+                    "body": $div
+                });
+
+                buttonToggle();
+
+                var move= function(e){
+                    var $this= $(this);
+                    var event= e|| window.event;
+                    var moveX= event.pageX;
+                    var moveY= event.pageY;
+                    var width= moveX- x;
+                    var height= moveY- y;
+                    if(width< 0){
+                         $div.css("left", moveX);
+                         $div.css("width", Math.abs(width));
+                         $div.find("canvas").attr("width", Math.abs(width));
+                    }else{
+                         $div.css("width", width);
+                         $div.find("canvas").attr("width", width);
+                    }
+                    if(height< 0){
+                         $div.css("top", moveY);
+                         $div.css("height", Math.abs(height));
+                         $div.find("canvas").attr("height", Math.abs(height));
+                    }else{
+                         $div.css("height", height);
+                         $div.find("canvas").attr("height", height);
+                    }
+                    context.clearRect(0, 0, Math.abs(width), Math.abs(height));
+                    if(width> 0&& height< 0){
+                         context.moveTo(0, Math.abs(height));
+                         context.lineTo(Math.abs(width), 0);
+                    }else if(width< 0&& height> 0){   
+                         context.moveTo(Math.abs(width), 0);
+                         context.lineTo(0, Math.abs(height));
+                    }else{
+                         context.moveTo(0, 0);
+                         context.lineTo(Math.abs(width), Math.abs(height));
+                    }
+                    context.stroke();
+                    console.log("moving");
+                };
+
+                var $div= undefined;
+                var context= undefined;
+                var x= undefined, y= undefined;
 
 
-		<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-			<div class="panel panel-default">
-				<div class="panel-heading" role="tab" id="headingOne" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-				      Collapsible Group Item #1
-				</div>
-				<div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-					<div class="panel-body">
-						<div class= "panel panel-info">
-							<div class= "panel-heading">
-								网卡名:
-							</div>
-							<div class="form-inline panel-body">
-							  <div class="form-group col-md-4">
-							    <label for="exampleInputEmail2">IP地址:</label>
-							    <input type="email" class="form-control" id="exampleInputEmail2" placeholder="IP地址(如192.168.0.1)">
-							  </div>
-							  <div class="form-group col-md-4">
-							      <label>子网掩码:</label>
-							      <input class="form-control" type="text" placeholder="子网掩码(如255.255.255.0)">
-							  </div>
-							  <div class="form-group col-md-4">
-							    <label for="exampleInputPassword2">目标地址:</label>
-							    <input type="password" class="form-control" id="exampleInputPassword2" placeholder="目标地址(如192.168.0.0)">
-							  </div>
-							</div>
-							<button class= "btn btn-info" data-toggle= "collapse" data-target= "#demo" aria-expanded="true" aria-controls="demo">展开路由表</button>
-							<div id= "demo" class= "panel-collapse collapse in">
-								<div class= "panel panel-warning">
-									<div class= "panel-heading">路由表</div>
-									<div class="form-inline panel-body">
-									  <div class="form-group col-md-4">
-									    <label for="exampleInputEmail2">IP地址:</label>
-									    <input type="email" class="form-control" id="exampleInputEmail2" placeholder="IP地址(如192.168.0.1)">
-									  </div>
-									  <div class="form-group col-md-4">
-									      <label>子网掩码:</label>
-									      <input class="form-control" type="text" placeholder="子网掩码(如255.255.255.0)">
-									  </div>
-									  <div class="form-group col-md-4">
-									    <label for="exampleInputPassword2">目标地址:</label>
-									    <input type="password" class="form-control" id="exampleInputPassword2" placeholder="目标地址(如192.168.0.0)">
-									  </div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-    </body>
+                $("#div1").mousedown(function(e){
+                    console.log("div1 mouse down");
+                    var $this= $(this);
+                    var event= e|| window.event;
+                    x= event.pageX;
+                    y= event.pageY;
+                    $div= $("<div><canvas></canvas></div>");
+                    context= $div.find("canvas").get(0).getContext("2d");
+                    context.strokeStyle= "red";
+                    $div.addClass("div");
+                    $div.css("left", x);
+                    $div.css("top", y);
+                    $div.find("canvas").attr("width", "0").attr("height", "0");
+                    $(document.body).mousemove(move);
+                    $(document.body).append($div);
+                     $(document.body).mouseup(function(){
+                         $div.remove();
+                         $(document.body).unbind("mouseup");
+                         return false;
+                     });
+                    return false;
+                });
+                $("#div2").mouseup(function(){
+                    console.log("div2 mouse up");
+                    $(document.body).unbind("mousemove");
+                    return false;
+                });
+            });
+      </script>                      
+      </head>        
+     <body>
+          <div id= "div1" style= "width: 100px; height: 100px; position: absolute; left: 100px; top: 100px; background-color: green;">
+          </div>
+          <div id= "div2" style= "width: 100px; height: 100px; position: absolute; left: 300px; top: 100px; background: red;"></div>
+          <!-- <div class= 'labContainer'></div>
+          <button class= 'btn btn-primary' id= 'createDevice'>创建设备</button> -->
+     </body>
 </html>

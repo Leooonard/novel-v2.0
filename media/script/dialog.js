@@ -190,6 +190,7 @@
 
             $footer.css("height", parseInt(0.1* screenSize.height* screenSizeRatio)+ "px")
                         .css("line-height", parseInt(0.1* screenSize.height* screenSizeRatio)+ "px")
+                        .css("padding-top", parseInt(0.01* screenSize.height* screenSizeRatio)+ "px")
                         .css("box-shadow", "0px "+  parseInt(-1.0/ 300.0* screenSize.height* screenSizeRatio)+ "px "+
                                  parseInt(1.0/ 600.0* screenSize.width* screenSizeRatio)+ "px "+
                                  parseInt(1.0/ 300.0* screenSize.height* screenSizeRatio)+ "px rgba(0,0,0,.265)");
