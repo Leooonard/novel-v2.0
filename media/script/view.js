@@ -595,136 +595,7 @@
                               拖动功能, 通过里层的$wrapper提供.
                               点击功能, 分为左键单击, 右键单击功能, 通过里层的$wrapper提供.
                          */
-                         var novelRouteViewMouseDown= function(e, mouseDownPointer){ 
-                              /*
-                                   该函数用于处理鼠标按键事件(当按在周围一圈黑色时). 需要注册mousemove事件.
-                                   由于鼠标容易划出至容器区域, 因此需要改变容器区域的mousemove事件以及鼠标图形.
-                              */        
-                              var event= e|| window.event;
-                              var $this= $(this); //$this指设备对象.
-                              if(event.which== 1){
-                                   mouseDownPointer.x= event.pageX;
-                                   mouseDownPointer.y= event.pageY;
-
-                                   //鼠标按下后, 注册mousemove. 平时不注册该事件.
-                                   $this.mousemove(function(e){
-                                        var event= e|| window.event;
-                                        //使用call函数, 改变函数this指向.
-                                        novelRouteViewMouseMove.call($this, e, mouseDownPointer);
-                                        return false;
-                                   });
-
-                                   $this.find(".wrapper").mousemove(function(e){
-                                        var event= e|| window.event;
-                                        var $that= $(this);
-                                        $that.css('cursor', 'Crosshair');
-                                        novelRouteViewMouseMove.call($this, e, mouseDownPointer);
-                                        return false;
-                                   });
-
-                                   //鼠标按下后, 还要调用controller的注册回调对象.
-                                   ControllerInterface.changeMouseMoveCallback(function(e){
-                                        var event= e|| window.event;
-                                        var $that= $(this);
-                                        $that.css('cursor', 'Crosshair');
-                                        //函数将在controller那里的代码执行, 所以本身的this指向是错误的, 需要用call来改变this指向.
-                                        //同时注意, 本身函数里的this指向被赋予了$that, 而不是$this!
-                                        novelRouteViewMouseMove.call($this, e, mouseDownPointer);
-                                        return false;
-                                   });
-                                   return false;
-                              }
-                         };                  
-                         var novelRouteViewMouseMove= function(e, mouseDownPointer){
-                              /*
-                                   鼠标按在黑色一圈上移动时的处理函数. 
-                                   功能为相应的改变设备的大小.
-                              */
-                              var event= e|| window.event;
-                              var $this= $(this);
-                              var nowPointer= {
-                                   x: event.pageX,
-                                   y: event.pageY
-                              };
-                              var width= parseInt($this.css('width'));
-                              var height= parseInt($this.css('height'));
-                              $this.css('width', (width+ nowPointer.x- mouseDownPointer.x)+ 'px');
-                              $this.css('height', (height+ nowPointer.y- mouseDownPointer.y)+ 'px');
-                              mouseDownPointer.x= nowPointer.x;
-                              mouseDownPointer.y= nowPointer.y;
-                              return false;
-                         };
-                         var wrapperMouseDown= function(e, mouseDownPointer){
-                              /*
-                                   鼠标按在图形上上时的处理函数. 
-                                   功能为移动相应的设备, 需要为外层已经自身设定相应的mousemove处理函数.
-                              */
-                              var event= e|| window.event;
-                              var $this= $(this);
-                              if(event.which== 1){
-                                   mouseDownPointer.x= event.pageX;
-                                   mouseDownPointer.y= event.pageY;
-
-                                   $this.mousemove(function(e){
-                                        var event= e|| window.event;
-                                        wrapperMouseMove.call($this, e, mouseDownPointer);
-                                        return false;
-                                   });
-
-                                   $this.parent().mousemove(function(e){
-                                        var event= e|| window.event;
-                                        var $that= $(this);
-                                        $that.css('cursor', 'default');
-                                        wrapperMouseMove.call($this, e, mouseDownPointer);
-                                        return false;
-                                   });
-
-                                   ControllerInterface.changeMouseMoveCallback(function(e){
-                                        var event= e|| window.event;
-                                        var $that= $(this);
-                                        $that.css('cursor', 'default');
-                                        wrapperMouseMove.call($this, e, mouseDownPointer);
-                                        return false;
-                                   });
-                                   return false;
-                              }else if(event.which== 3){
-                                   //右键点击事件. 应该要创造链接. 需要通知控制器.
-                                   ControllerInterface.deviceRightClickCallback(event, ID);
-                                   return false;
-                              }
-                         };
-                         var wrapperMouseMove= function(e, mouseDownPointer){
-                              var event= e|| window.event;
-                              var $this= $(this);
-                              var $parent= $this.parent();
-                              var nowPointer= {
-                                   x: event.pageX,
-                                   y: event.pageY
-                              };
-                              var left= parseInt($parent.css('left'));
-                              var top= parseInt($parent.css('top'));
-
-                              //首先先要解除对象的click事件绑定, 因为对象移动了.
-                              $this.unbind("click");
-
-                              $parent.css('left', (left+ nowPointer.x- mouseDownPointer.x)+ 'px');
-                              $parent.css('top', (top+ nowPointer.y- mouseDownPointer.y)+ 'px');
-                              mouseDownPointer.x= nowPointer.x;
-                              mouseDownPointer.y= nowPointer.y;
-                         };
-                         var wrapperClick= function(e){
-                              var event= e|| window.event;
-                              var $this= $(this);
-                              $this.unbind('mousemove');
-                              $novelRouteView.unbind("mousemove");
-                              $novelRouteView.css("cursor", "Crosshair");
-                              ControllerInterface.restoreMoveCallback();
-                              if(event.which== 1){
-                                   //是左键点击事件应该通知controller. 由controller接管, 调出配置div.
-                                   ControllerInterface.deviceClickCallback(ID);
-                              }
-                              return false;
-                         };
+                         
 
                          //使用object使其成为可变对象, 通过传入函数即可改变自身.
                          var mouseDownPointer= { 
@@ -732,7 +603,6 @@
                               y: 0
                          };
 
-                         var $novelRouteView= $htmlView;
                          $novelRouteView.mousedown(function(e){
                               var $this= $(this);
                               //使用call函数, 改变函数内的this指向. 使操作能够正常.
@@ -766,16 +636,149 @@
                               return false;
                          });
 
-                         var wrapperMouseUp= function(e){
-                              var $this= $(this);
-                              $this.unbind('mousemove');
-                              $novelRouteView.unbind("mousemove");
-                              $novelRouteView.css("cursor", "Crosshair");
-                              ControllerInterface.restoreMoveCallback();
-                              return false;
-                         };
                          $wrapper.mouseup(wrapperMouseUp);
                     };
+
+                    var novelRouteViewMouseDown= function(e, mouseDownPointer){ 
+                          /*
+                               该函数用于处理鼠标按键事件(当按在周围一圈黑色时). 需要注册mousemove事件.
+                               由于鼠标容易划出至容器区域, 因此需要改变容器区域的mousemove事件以及鼠标图形.
+                          */        
+                          var event= e|| window.event;
+                          var $this= $(this); //$this指设备对象.
+                          if(event.which== 1){
+                               mouseDownPointer.x= event.pageX;
+                               mouseDownPointer.y= event.pageY;
+
+                               //鼠标按下后, 注册mousemove. 平时不注册该事件.
+                               $this.mousemove(function(e){
+                                    var event= e|| window.event;
+                                    //使用call函数, 改变函数this指向.
+                                    novelRouteViewMouseMove.call($this, e, mouseDownPointer);
+                                    return false;
+                               });
+
+                               $this.find(".wrapper").mousemove(function(e){
+                                    var event= e|| window.event;
+                                    var $that= $(this);
+                                    $that.css('cursor', 'Crosshair');
+                                    novelRouteViewMouseMove.call($this, e, mouseDownPointer);
+                                    return false;
+                               });
+
+                               //鼠标按下后, 还要调用controller的注册回调对象.
+                               ControllerInterface.changeMouseMoveCallback(function(e){
+                                    var event= e|| window.event;
+                                    var $that= $(this);
+                                    $that.css('cursor', 'Crosshair');
+                                    //函数将在controller那里的代码执行, 所以本身的this指向是错误的, 需要用call来改变this指向.
+                                    //同时注意, 本身函数里的this指向被赋予了$that, 而不是$this!
+                                    novelRouteViewMouseMove.call($this, e, mouseDownPointer);
+                                    return false;
+                               });
+                               return false;
+                          }
+                     };                  
+                     var novelRouteViewMouseMove= function(e, mouseDownPointer){
+                          /*
+                               鼠标按在黑色一圈上移动时的处理函数. 
+                               功能为相应的改变设备的大小.
+                          */
+                          var event= e|| window.event;
+                          var $this= $(this);
+                          var nowPointer= {
+                               x: event.pageX,
+                               y: event.pageY
+                          };
+                          var width= parseInt($this.css('width'));
+                          var height= parseInt($this.css('height'));
+                          $this.css('width', (width+ nowPointer.x- mouseDownPointer.x)+ 'px');
+                          $this.css('height', (height+ nowPointer.y- mouseDownPointer.y)+ 'px');
+                          mouseDownPointer.x= nowPointer.x;
+                          mouseDownPointer.y= nowPointer.y;
+                          return false;
+                     };
+                     var wrapperMouseDown= function(e, mouseDownPointer){
+                          /*
+                               鼠标按在图形上上时的处理函数. 
+                               功能为移动相应的设备, 需要为外层已经自身设定相应的mousemove处理函数.
+                          */
+                          var event= e|| window.event;
+                          var $this= $(this);
+                          if(event.which== 1){
+                               mouseDownPointer.x= event.pageX;
+                               mouseDownPointer.y= event.pageY;
+
+                               $this.mousemove(function(e){
+                                    var event= e|| window.event;
+                                    wrapperMouseMove.call($this, e, mouseDownPointer);
+                                    return false;
+                               });
+
+                               $this.parent().mousemove(function(e){
+                                    var event= e|| window.event;
+                                    var $that= $(this);
+                                    $that.css('cursor', 'default');
+                                    wrapperMouseMove.call($this, e, mouseDownPointer);
+                                    return false;
+                               });
+
+                               ControllerInterface.changeMouseMoveCallback(function(e){
+                                    var event= e|| window.event;
+                                    var $that= $(this);
+                                    $that.css('cursor', 'default');
+                                    wrapperMouseMove.call($this, e, mouseDownPointer);
+                                    return false;
+                               });
+                               return false;
+                          }else if(event.which== 3){
+                               //右键点击事件. 应该要创造链接. 需要通知控制器.
+                               ControllerInterface.deviceRightClickCallback(event, ID);
+                               return false;
+                          }
+                     };
+                     var wrapperMouseMove= function(e, mouseDownPointer){
+                          var event= e|| window.event;
+                          var $this= $(this);
+                          var $parent= $this.parent();
+                          var nowPointer= {
+                               x: event.pageX,
+                               y: event.pageY
+                          };
+                          var left= parseInt($parent.css('left'));
+                          var top= parseInt($parent.css('top'));
+
+                          //首先先要解除对象的click事件绑定, 因为对象移动了.
+                          $this.unbind("click");
+
+                          $parent.css('left', (left+ nowPointer.x- mouseDownPointer.x)+ 'px');
+                          $parent.css('top', (top+ nowPointer.y- mouseDownPointer.y)+ 'px');
+                          mouseDownPointer.x= nowPointer.x;
+                          mouseDownPointer.y= nowPointer.y;
+                     };
+                     var wrapperClick= function(e){
+                          var event= e|| window.event;
+                          var $this= $(this);
+                          $this.unbind('mousemove');
+                          $novelRouteView.unbind("mousemove");
+                          $novelRouteView.css("cursor", "Crosshair");
+                          ControllerInterface.restoreMoveCallback();
+                          if(event.which== 1){
+                               //是左键点击事件应该通知controller. 由controller接管, 调出配置div.
+                               ControllerInterface.deviceClickCallback(ID);
+                          }
+                          return false;
+                     };
+
+
+                     var wrapperMouseUp= function(e){
+                          var $this= $(this);
+                          $this.unbind('mousemove');
+                          $novelRouteView.unbind("mousemove");
+                          $novelRouteView.css("cursor", "Crosshair");
+                          ControllerInterface.restoreMoveCallback();
+                          return false;
+                     };
 
                     this.changeViewMouseUp= function(func){
                         /*
@@ -815,6 +818,7 @@
                                    "</div>"+
                               "</div>"+
                          "</div>");
+                    var $novelRouteView= $htmlView;
                     var $wrapper= $htmlView.find(".wrapper");
                }; 
                this.CreateRoute= function(){
@@ -878,6 +882,7 @@
                             //对角坐标在原始坐标左面时, 需要移动矩形的左上角位置.
                             $htmlView.css("left", nowX);
                             $htmlView.css("width", Math.abs(width));
+                            $htmlView.css("padding", "0");
                             $htmlView.find("canvas").attr("width", Math.abs(width));
                         }else if(width== 0){
                             //两点x坐标相同. 这种情况, 需要给canvas一个1px的宽度(), 并且设置两边的padding为10px.
@@ -887,11 +892,13 @@
                             $htmlView.find("canvas").attr("width", strokeWidth);
                         }else{
                             $htmlView.css("width", width);
+                            $htmlView.css("padding", "0");
                             $htmlView.find("canvas").attr("width", width);
                         }
                         if(height< 0){
                             $htmlView.css("top", nowY);
                             $htmlView.css("height", Math.abs(height));
+                            $htmlView.css("padding", "0");
                             $htmlView.find("canvas").attr("height", Math.abs(height));
                         }else if(height== 0){
                             $htmlView.css("top", nowY- 10);
@@ -900,6 +907,7 @@
                             $htmlView.find("canvas").attr("height", strokeWidth);
                         }else{
                             $htmlView.css("height", height);
+                            $htmlView.css("padding", "0");
                             $htmlView.find("canvas").attr("height", height);
                         }
 
@@ -944,6 +952,7 @@
                         if(x|| x=== 0){
                             if(!originX&& originX!== 0){
                                 originX= x;
+                                $htmlView.css("left", originX);
                             }else{
                                 nowX= x;
                             }
@@ -951,12 +960,13 @@
                         if(y|| y=== 0){
                             if(!originY&& originY!== 0){
                                 originY= y;
+                                $htmlView.css("top", originY);
                             }else{
                                 nowY= y;
                             }
                         }
 
-                        console.log(originY);
+
                         //设置完最新坐标后默认直接更新图形.
                         if(update|| update=== null){
                             caculateNewPosition();
