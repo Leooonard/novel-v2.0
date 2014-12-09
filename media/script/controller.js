@@ -174,6 +174,9 @@
                         }
                     }
 
+                    //为线段绑定事件.
+                    $temporarySeg.bindEvent();
+
                     //还原原来的抬起事件.
                     restore();
                     return false;

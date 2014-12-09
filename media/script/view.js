@@ -861,6 +861,8 @@
                         "</div>"
                     );
                     var context= $htmlView.find("canvas").get(0).getContext("2d");
+                    context.lineWidth= 1;
+                    context.strokeStyle= "rgba(0, 0, 0, 1)";
 
                     this.getHtmlView= function(){
                         return $htmlView;
@@ -880,34 +882,39 @@
                         var height= nowY- originY;
                         if(width< 0){
                             //对角坐标在原始坐标左面时, 需要移动矩形的左上角位置.
+                            console.log(nowX);
                             $htmlView.css("left", nowX);
                             $htmlView.css("width", Math.abs(width));
                             $htmlView.css("padding", "0");
                             $htmlView.find("canvas").attr("width", Math.abs(width));
                         }else if(width== 0){
                             //两点x坐标相同. 这种情况, 需要给canvas一个1px的宽度(), 并且设置两边的padding为10px.
-                            $htmlView.css("left", nowX- 10); //先左移10px.
+                            // $htmlView.css("left", nowX- 10); //先左移10px.
+                            $htmlView.css("left", originX);
                             $htmlView.css("width", strokeWidth);
-                            $htmlView.css("padding", "0 10px");
+                            // $htmlView.css("padding", "0 10px");
                             $htmlView.find("canvas").attr("width", strokeWidth);
                         }else{
+                            $htmlView.css("left", originX);
                             $htmlView.css("width", width);
-                            $htmlView.css("padding", "0");
+                            // $htmlView.css("padding", "0");
                             $htmlView.find("canvas").attr("width", width);
                         }
                         if(height< 0){
                             $htmlView.css("top", nowY);
                             $htmlView.css("height", Math.abs(height));
-                            $htmlView.css("padding", "0");
+                            // $htmlView.css("padding", "0");
                             $htmlView.find("canvas").attr("height", Math.abs(height));
                         }else if(height== 0){
-                            $htmlView.css("top", nowY- 10);
+                            // $htmlView.css("top", nowY- 10);
+                            $htmlView.css("top", originY);
                             $htmlView.css("height", strokeWidth);
-                            $htmlView.css("padding", "10px 0");
+                            // $htmlView.css("padding", "10px 0");
                             $htmlView.find("canvas").attr("height", strokeWidth);
                         }else{
                             $htmlView.css("height", height);
-                            $htmlView.css("padding", "0");
+                            $htmlView.css("top", originY);
+                            // $htmlView.css("padding", "0");
                             $htmlView.find("canvas").attr("height", height);
                         }
 
@@ -915,10 +922,31 @@
                         updateCanvas();
                     };
 
-                    var updateCanvas= function(){
+                    var updateCanvas= function(hover){
                         var width= nowX- originX;
                         var height= nowY- originY;
                         context.clearRect(0, 0, Math.abs(width), Math.abs(height));
+                        if(hover){ //是鼠标在线段上方的状态.
+                            context.save();
+                            context.strokeStyle= "rgba(255, 0, 0, .3)";
+                            context.lineWidth= "10";
+                            context.lineCap= "round";
+                            context.beginPath();
+                            if(width> 0&& height< 0){
+                                context.moveTo(0, Math.abs(height));
+                                context.lineTo(Math.abs(width), 0);
+                            }else if(width< 0&& height> 0){   
+                                context.moveTo(Math.abs(width), 0);
+                                context.lineTo(0, Math.abs(height));
+                            }else{
+                                context.moveTo(0, 0);
+                                context.lineTo(Math.abs(width), Math.abs(height));
+                            }
+                            context.closePath();
+                            context.stroke();
+                            context.restore();
+                        }
+                        context.beginPath();
                         if(width> 0&& height< 0){
                             context.moveTo(0, Math.abs(height));
                             context.lineTo(Math.abs(width), 0);
@@ -929,6 +957,7 @@
                             context.moveTo(0, 0);
                             context.lineTo(Math.abs(width), Math.abs(height));
                         }
+                        context.closePath();
                         context.stroke();
                     };
 
@@ -971,6 +1000,89 @@
                         if(update|| update=== null){
                             caculateNewPosition();
                         }
+                    };
+
+                    var isInZone= function(x, y){
+                        /*
+                            这个函数通过origin坐标与now坐标. 得出直线方程.
+                            然后计算传入的坐标是否在该直线上下10px范围内.
+                            在返回true, 不在返回false.
+                        */
+
+                        var zoneHeight= 14; //范围高度.
+
+                        //fx是求出的对应x值, 在直线上的y值.  式子中, 有个地方* 1.0是为了转型成浮点数.
+                        var fx= ((nowY- originY)* 1.0/ (nowX- originX))* (x- originX)+ originY;
+
+                        return ((y> fx- zoneHeight)&& (y< fx+ zoneHeight)) //如果y值在范围高度内, 返回true.
+                            
+                    };
+
+                    var updateHoverStyle= function(){
+                        //暂时只更换鼠标的手势.
+                        $htmlView.css("cursor", "pointer");
+                        updateCanvas(true);
+                    };
+
+                    var cancelHoverStyle= function(){
+                        //还原鼠标手势.
+                        $htmlView.css("cursor", "default");
+                        updateCanvas();
+                    };
+
+                    this.bindEvent= function(){
+                        /*
+                            这个函数主要用于绑定线段的事件函数.
+                            线段最主要的事件函数分别是mouseenter, mousemove.
+                            当鼠标进入线段上下10px区域时, 需要改变状态变量, 将线段设置为可点击状态, 并且在外观上做出改变, 最后监听mousemove事件.
+                            当鼠标离开线段上下10ox区域时, 需要改变状态变量, 将线段设置为不可点击状态, 并且在外观上还原, 停止监听mousemove.
+                        */
+
+                        $htmlView.mouseenter(function(e){
+                            var event= e|| window.event;
+                            var state= false; //确定鼠标是否在范围内.
+                            if(isInZone(parseInt(event.pageX), parseInt(event.pageY))){ //在范围内, 需要改变样式. 并监听点击事件.
+                                state= true;
+
+                                $htmlView.click(function(e){
+                                    //...
+                                    alert("点击到了!");
+                                    return false;
+                                });
+
+                                updateHoverStyle();
+                            }
+
+                            $htmlView.mousemove(function(e){
+                                var event= e|| window.event;
+                                if(!isInZone(parseInt(event.pageX), parseInt(event.pageY))&& state){
+                                    //鼠标不在范围内, 并且原来状态在范围内时, 说明鼠标离开了范围.
+                                    state= false;
+                                    $htmlView.unbind("click");
+
+                                    cancelHoverStyle();
+                                }else if(isInZone(parseInt(event.pageX), parseInt(event.pageY))&& !state){
+                                    //鼠标在范围内, 并且原来状态不在范围内时, 鼠标进入了范围.
+                                    state= true;
+                                    $htmlView.click(function(e){
+                                        //...
+                                        alert("点击到了!");
+                                        return false;
+                                    });
+
+                                    updateHoverStyle();
+                                }
+                                return false;
+                            });
+                            return false;
+                        });
+
+                        $htmlView.mouseleave(function(e){
+                            $htmlView.unbind("mousemove");
+                            $htmlView.unbind("click");
+                            cancelHoverStyle();
+                            return false;
+                        });
                     };
                };
                this.CreateCableSegement= function(){

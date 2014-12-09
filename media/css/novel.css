@@ -61,6 +61,9 @@
 }
 
 .novelSegement{
-	outline: 1px solid red;
 	position: absolute;
 }
+
+/*.novelSegement canvas{
+	outline: 1px solid red;
+}*/
