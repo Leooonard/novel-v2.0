@@ -71,10 +71,10 @@
                     };
                */
                //点对点结构的物理层.
-               var p2pPhysicalLayer= function(){
+               var p2pPhysicalLayer= function(dict){
                     var name= "点对点结构物理层";
-                    var $htmlView= CreateKnownTypePhysicalLayerHtmlView(name);
-                    this.getPhysicalLayerInfo= function(){
+                    var $htmlView= CreateKnownTypePhysicalLayerHtmlView(dict.name, dict.bindWidth. dict.delay);
+                    this.getLayerInfo= function(){
                          return {
                               "type": "p2p",
                               "bindWidth": $htmlView.find("#physicalLayerBindWidth").val().toString(),
@@ -84,15 +84,19 @@
                     this.getHtmlView= function(){
                          return $htmlView;
                     };
+
+                    this.updateHtmlView= function(dict){
+                        $htmlView= CreateKnownTypePhysicalLayerHtmlView(dict.name, dict.bindWidth. dict.delay);
+                    };
                };
                this.createP2PPhysicalLayer= function(){
                     return new p2pPhysicalLayer();
                };
 
                //总线结构的物理层.
-               var busPhysicalLayer= function(){
+               var busPhysicalLayer= function(dict){
                     var name= "总线结构物理层";
-                    var $htmlView= CreateKnownTypePhysicalLayerHtmlView(name);
+                    var $htmlView= CreateKnownTypePhysicalLayerHtmlView(dict.name, dict.bindWidth. dict.delay);
                     this.getPhysicalLayerInfo= function(){
                          return {
                               "type": "bus",
@@ -100,8 +104,13 @@
                               "delay": $htmlView.find("#physicalLayerDelay").val().toString()
                          }
                     };
+
                     this.getHtmlView= function(){
                          return $htmlView;
+                    };
+
+                    this.updateHtmlView= function(dict){
+                        $htmlView= CreateKnownTypePhysicalLayerHtmlView(dict.name, dict.bindWidth. dict.delay);
                     };
                };
                this.createBusPhysicalLayer= function(){
@@ -139,7 +148,7 @@
                               </div>\
                          </div>\
                     ");  
-                    this.getPhysicalLayerInfo= function(){
+                    this.getLayerInfo= function(){
                          return {
                               "type": $htmlView.find("physicalLayerType").val().toString(),
                               "bindWidth": $htmlView.find("#physicalLayerBindWidth").val().toString(),
@@ -154,7 +163,7 @@
                     return new unknownPhysicalLayer();
                };
           },
-          NetworkLayer: function(){
+            NetworkLayer: function(){
                /*
                     网络层将集成到设备中. 网络层目前将默认使用主流的IPv4协议.(IPv6协议可以考虑后期加入)
                     网络层对于不同的设备将显示不同的元素, 可分为主机设备, 路由设备两种.
@@ -438,7 +447,7 @@
                     var name= "IPv4主机网络层";
                     var $htmlView= CreateNetworkLayerView(networkAdapterInfo, true);
 
-                    this.getNetworkLayerInfo= function(){
+                    this.getLayerInfo= function(){
                          var info= [];
                          var $adapterList= $htmlView.find("#networkAdapter")
                          for(var i= 0; i< $adapterList.length; i++){
@@ -456,6 +465,13 @@
                     this.getHtmlView= function(){
                          return $htmlView;
                     };
+
+                    this.updateHtmlView= function(networkAdapterInfo){
+                        /*
+                            当用户设置之后, 更新视图.
+                        */
+                        $htmlView= CreateNetworkLayerView(networkAdapterInfo, true);
+                    };  
                };
                this.createHostIPv4NetworkLayer= function(networkAdapterInfo){
                     return new hostIPv4NetworkLayer(networkAdapterInfo);
@@ -463,26 +479,26 @@
 
                var routeIPv4NetworkLayer= function(networkAdapterInfo){
                     /*
-                         IPv4协议下的路由设备网络层.
-                         需要提供一个输入, 说明该路由网卡的情况, 包括网卡的数量(靠数组长度提供), 网卡连接的网段的名字, 网卡已存的信息.
-                         (每张网卡将对应一个IP, 子网掩码, 一个路由表)
+                    IPv4协议下的路由设备网络层.
+                    需要提供一个输入, 说明该路由网卡的情况, 包括网卡的数量(靠数组长度提供), 网卡连接的网段的名字, 网卡已存的信息.
+                    (每张网卡将对应一个IP, 子网掩码, 一个路由表)
 
-                         networkAdapterInfo= [{
-                              "name": "", 网卡名字
-                              "ipAddress": "", 网卡对应的IP地址
-                              "maskAddress": "", 网卡对应的子网掩码
-                              "routeTable": [{ 网卡对应的路由表
-                                   "targetRouteAddress": "", 目标路由地址
-                                   "maskAddress": "", 子网掩码
-                                   "nextSkip": "" 下一跳地址
-                              }, ...]
-                         }, ...];
+                    networkAdapterInfo= [{
+                        "name": "", 网卡名字
+                        "ipAddress": "", 网卡对应的IP地址
+                        "maskAddress": "", 网卡对应的子网掩码
+                        "routeTable": [{ 网卡对应的路由表
+                            "targetRouteAddress": "", 目标路由地址
+                            "maskAddress": "", 子网掩码
+                            "nextSkip": "" 下一跳地址
+                        }, ...]
+                    }, ...];
                     */
 
                     var name= "IPv4路由网络层"
                     var $htmlView= CreateNetworkLayerView(networkAdapterInfo, false);
 
-                    this.getNetworkLayerInfo= function(){
+                    this.getLayerInfo= function(){
                          var info= [];
                          var $adapterList= $htmlView.find("#networkAdapter")
                          for(var i= 0; i< $adapterList.length; i++){
@@ -516,317 +532,324 @@
                     this.getHtmlView= function(){
                          return $htmlView;
                     };
+
+                    this.updateHtmlView= function(networkAdapterInfo){
+                        /*
+                            当用户设置之后, 更新视图.
+                        */
+                        $htmlView= CreateNetworkLayerView(networkAdapterInfo, false);
+                    }; 
                };
                this.createRouteIPv4NetworkLayer= function(networkAdapterInfo){
                     return new routeIPv4NetworkLayer(networkAdapterInfo);
                };
-          },
-          Device: function(){
-               var route= function(){
-                    var ID= undefined; //唯一的标示符.
-                    var viewName= undefined; //表示设备的名字.
-                    this.setID= function(id){
-                         /*
-                              该函数绑定对象唯一的ID.
-                         */
-                         ID= id;
-                    };
-                    this.getID= function(){
-                         /*
-                              该函数绑定对象唯一的ID.
-                         */
-                         return ID;
-                    };
-                    this.setViewName= function(name){
-                         viewName= name;
-                    };
-                    this.getViewName= function(){
-                         return viewName;
-                    };
-                    this.getHtmlView= function(){
-                         /*
-                              返回对象的html jQuery对象, 将被显示在容器中.
-                         */
-                         return $htmlView;
-                    };
-                    this.setStyle= function(styleDict){
-                         /*
-                              为对象的html对象设置样式.
-                              参数为字典, 键为设置的具体样式, 值为样式的值.
-                         */
-                         for(item in styleDict){ //依次为每个设定项赋值.
-                              try{
-                                   $htmlView.css(item, styleDict[item]);
-                              }catch(e){
-                                   continue;
-                              }    
-                         }
-                    };
-                    this.getViewInfo= function(){
-                         /*
-                              该函数将返回设备视图支持的组件视图. 以对象形式返回.
-                         */
-                         return {
-                              portInfo: $PortInfoView,
-                              routeTableInfo: $RouteTableInfoView
-                         };
-                    };
+            },
+            Device: function(){
+                var ID= undefined; //唯一的标示符.
+                var viewName= undefined; //表示设备的名字.
 
-                    this.compareID= function(id){
-                         if(ID== id){
-                              return true;
-                         }else{
-                              return false;
-                         }
-                    }
-                    
-                    var ControllerInterface= undefined;
-                    this.registerControllerInterface= function(interface){
-                         ControllerInterface= interface;
-                    };
+                //是一个容器, 表示该视图对象使用了七层网络协议中的哪几层部件.
+                //初始值为全false, 等于全空.
+                //暂时只实现物理层, 网络层.
+                var networkLayer= {
+                    "physicalLayer": false,
+                    "networkLayer": false,
+                };
 
-                    this.bindEvent= function(){
-                         /*
-                              该函数用于为设备视图绑定事件.
-                              绑定事件为: $novelRouteView的mousedown, click, mouseup, 以及
-                              $wrapper的mousedown, click, mouseup.
+                this.setID= function(id){
+                     /*
+                          该函数绑定对象唯一的ID.
+                     */
+                     ID= id;
+                };
+                this.getID= function(){
+                     /*
+                          该函数绑定对象唯一的ID.
+                     */
+                     return ID;
+                };
+                this.setViewName= function(name){
+                     viewName= name;
+                };
+                this.getViewName= function(){
+                     return viewName;
+                };
+                this.appendToDocument= function(document){
+                    /*
+                        将htmlView放入文档中.
+                        传入的参数是放视图的容器.
+                    */
+                    $(document).append($htmlView);
+                };
+                this.getHtmlView= function(){
+                     /*
+                          返回对象的html jQuery对象, 将被显示在容器中.
+                     */
+                     return $htmlView;
+                };
 
-                              主要提供的操作时, 放大缩小功能, 通过最外层的$novelRouetView提供.
-                              拖动功能, 通过里层的$wrapper提供.
-                              点击功能, 分为左键单击, 右键单击功能, 通过里层的$wrapper提供.
-                         */
-                         
-
-                         //使用object使其成为可变对象, 通过传入函数即可改变自身.
-                         var mouseDownPointer= { 
-                              x: 0,
-                              y: 0
-                         };
-
-                         $novelRouteView.mousedown(function(e){
-                              var $this= $(this);
-                              //使用call函数, 改变函数内的this指向. 使操作能够正常.
-                              novelRouteViewMouseDown.call($this, e, mouseDownPointer);
-                              return false;
-                         });
-                         $novelRouteView.mouseup(function(e){
-                              var $this= $(this);
-                              $this.unbind('mousemove');
-                              $wrapper.unbind("mousemove");
-                              $wrapper.css("cursor", "default");
-                              ControllerInterface.restoreMoveCallback();
-                              return false;
-                         });
-                         $novelRouteView.click(function(e){
-                              var $this= $(this);
-                              $this.unbind('mousemove');
-                              $wrapper.unbind("mousemove");
-                              $wrapper.css("cursor", "default");
-                              ControllerInterface.restoreMoveCallback();
-                              return false;
-                         });
-
-                         $wrapper.mousedown(function(e){
-                              var $this= $(this);
-                              //这里先解绑click, 再重新绑. 因为移动后会解绑click, 所以需要重新绑定.
-                              //先解绑是因为上次操作可能不触发mousemove, 防止注册多个重复click事件.
-                              $this.unbind("click");
-                              $this.click(wrapperClick);
-                              wrapperMouseDown.call($this, e, mouseDownPointer);
-                              return false;
-                         });
-
-                         $wrapper.mouseup(wrapperMouseUp);
-                    };
-
-                    var novelRouteViewMouseDown= function(e, mouseDownPointer){ 
-                          /*
-                               该函数用于处理鼠标按键事件(当按在周围一圈黑色时). 需要注册mousemove事件.
-                               由于鼠标容易划出至容器区域, 因此需要改变容器区域的mousemove事件以及鼠标图形.
-                          */        
-                          var event= e|| window.event;
-                          var $this= $(this); //$this指设备对象.
-                          if(event.which== 1){
-                               mouseDownPointer.x= event.pageX;
-                               mouseDownPointer.y= event.pageY;
-
-                               //鼠标按下后, 注册mousemove. 平时不注册该事件.
-                               $this.mousemove(function(e){
-                                    var event= e|| window.event;
-                                    //使用call函数, 改变函数this指向.
-                                    novelRouteViewMouseMove.call($this, e, mouseDownPointer);
-                                    return false;
-                               });
-
-                               $this.find(".wrapper").mousemove(function(e){
-                                    var event= e|| window.event;
-                                    var $that= $(this);
-                                    $that.css('cursor', 'Crosshair');
-                                    novelRouteViewMouseMove.call($this, e, mouseDownPointer);
-                                    return false;
-                               });
-
-                               //鼠标按下后, 还要调用controller的注册回调对象.
-                               ControllerInterface.changeMouseMoveCallback(function(e){
-                                    var event= e|| window.event;
-                                    var $that= $(this);
-                                    $that.css('cursor', 'Crosshair');
-                                    //函数将在controller那里的代码执行, 所以本身的this指向是错误的, 需要用call来改变this指向.
-                                    //同时注意, 本身函数里的this指向被赋予了$that, 而不是$this!
-                                    novelRouteViewMouseMove.call($this, e, mouseDownPointer);
-                                    return false;
-                               });
-                               return false;
-                          }
-                     };                  
-                     var novelRouteViewMouseMove= function(e, mouseDownPointer){
-                          /*
-                               鼠标按在黑色一圈上移动时的处理函数. 
-                               功能为相应的改变设备的大小.
-                          */
-                          var event= e|| window.event;
-                          var $this= $(this);
-                          var nowPointer= {
-                               x: event.pageX,
-                               y: event.pageY
-                          };
-                          var width= parseInt($this.css('width'));
-                          var height= parseInt($this.css('height'));
-                          $this.css('width', (width+ nowPointer.x- mouseDownPointer.x)+ 'px');
-                          $this.css('height', (height+ nowPointer.y- mouseDownPointer.y)+ 'px');
-                          mouseDownPointer.x= nowPointer.x;
-                          mouseDownPointer.y= nowPointer.y;
-                          return false;
-                     };
-                     var wrapperMouseDown= function(e, mouseDownPointer){
-                          /*
-                               鼠标按在图形上上时的处理函数. 
-                               功能为移动相应的设备, 需要为外层已经自身设定相应的mousemove处理函数.
-                          */
-                          var event= e|| window.event;
-                          var $this= $(this);
-                          if(event.which== 1){
-                               mouseDownPointer.x= event.pageX;
-                               mouseDownPointer.y= event.pageY;
-
-                               $this.mousemove(function(e){
-                                    var event= e|| window.event;
-                                    wrapperMouseMove.call($this, e, mouseDownPointer);
-                                    return false;
-                               });
-
-                               $this.parent().mousemove(function(e){
-                                    var event= e|| window.event;
-                                    var $that= $(this);
-                                    $that.css('cursor', 'default');
-                                    wrapperMouseMove.call($this, e, mouseDownPointer);
-                                    return false;
-                               });
-
-                               ControllerInterface.changeMouseMoveCallback(function(e){
-                                    var event= e|| window.event;
-                                    var $that= $(this);
-                                    $that.css('cursor', 'default');
-                                    wrapperMouseMove.call($this, e, mouseDownPointer);
-                                    return false;
-                               });
-                               return false;
-                          }else if(event.which== 3){
-                               //右键点击事件. 应该要创造链接. 需要通知控制器.
-                               ControllerInterface.deviceRightClickCallback(event, ID);
-                               return false;
-                          }
-                     };
-                     var wrapperMouseMove= function(e, mouseDownPointer){
-                          var event= e|| window.event;
-                          var $this= $(this);
-                          var $parent= $this.parent();
-                          var nowPointer= {
-                               x: event.pageX,
-                               y: event.pageY
-                          };
-                          var left= parseInt($parent.css('left'));
-                          var top= parseInt($parent.css('top'));
-
-                          //首先先要解除对象的click事件绑定, 因为对象移动了.
-                          $this.unbind("click");
-
-                          $parent.css('left', (left+ nowPointer.x- mouseDownPointer.x)+ 'px');
-                          $parent.css('top', (top+ nowPointer.y- mouseDownPointer.y)+ 'px');
-                          mouseDownPointer.x= nowPointer.x;
-                          mouseDownPointer.y= nowPointer.y;
-                     };
-                     var wrapperClick= function(e){
-                          var event= e|| window.event;
-                          var $this= $(this);
-                          $this.unbind('mousemove');
-                          $novelRouteView.unbind("mousemove");
-                          $novelRouteView.css("cursor", "Crosshair");
-                          ControllerInterface.restoreMoveCallback();
-                          if(event.which== 1){
-                               //是左键点击事件应该通知controller. 由controller接管, 调出配置div.
-                               ControllerInterface.deviceClickCallback(ID);
-                          }
-                          return false;
-                     };
-
-
-                     var wrapperMouseUp= function(e){
-                          var $this= $(this);
-                          $this.unbind('mousemove');
-                          $novelRouteView.unbind("mousemove");
-                          $novelRouteView.css("cursor", "Crosshair");
-                          ControllerInterface.restoreMoveCallback();
-                          return false;
-                     };
-
-                    this.changeViewMouseUp= function(func){
-                        /*
-                            通过该函数, controller可以改变视图监听的mouseup事件函数.
-                        */
-                        $wrapper.unbind("mouseup");
-                        $wrapper.mouseup(func);
-                    };
-
-                    this.restoreViewMouseUp= function(){
-                        $wrapper.unbind("mouseup");
-                        $wrapper.mouseup(wrapperMouseUp);
-                    };
-
-                    this.getCenteralPosition= function(){
-                        /*
-                            该函数用于返回设备的中心位置坐标.
-                            返回值为对象. 对象包含x坐标, y坐标.
-                        */
-
-                        var left= parseInt($htmlView.css("left"));
-                        var top= parseInt($htmlView.css("top"));
-                        var width= parseInt($htmlView.css("width"));
-                        var height= parseInt($htmlView.css("height"));
-                        return {
-                            x: left+ width/ 2,
-                            y: top+ height/ 2
+                this.extendNetworkLayer= function(dict){
+                    for(layer in dict){
+                        if(dict.hasOwnProperty(layer)){
+                            networkLayer[layer]= dict[layer];
                         }
-                    };
+                    }
+                };
 
-                    var $htmlView= $(
-                         "<div class= 'novelRouteView'>"+
-                              "<div class= 'wrapper'>"+
-                                   "<div class= 'routeView'>"+
-                                        "<img src='/media/image/route.jpg' class= 'routeImg'>"+
-                                        "<p>设备</p>"+
-                                   "</div>"+
-                              "</div>"+
-                         "</div>");
-                    var $novelRouteView= $htmlView;
-                    var $wrapper= $htmlView.find(".wrapper");
-               }; 
-               this.CreateRoute= function(){
-                    return new route();
-               }; 
-          },
-          Segement: function(){
-               var cableSegement= function(){
+                //暂时不使用.
+                // this.setStyle= function(styleDict){
+                //      /*
+                //           为对象的html对象设置样式.
+                //           参数为字典, 键为设置的具体样式, 值为样式的值.
+                //      */
+                //      for(item in styleDict){ //依次为每个设定项赋值.
+                //           try{
+                //                $htmlView.css(item, styleDict[item]);
+                //           }catch(e){
+                //                continue;
+                //           }    
+                //      }
+                // };
+
+                this.getViewInfo= function(){
+                    /*
+                        该函数将返回设备视图支持的组件视图. 以对象形式返回.
+                    */
+                    var $div= $("<div></div>");
+
+                    //为了保持顺序只能写死. 以后需要改进这里的写法.
+                    if(networkLayer["networkLayer"]){
+                        $div.append(networkLayer["networkLayer"].getHtmlView());
+                    } 
+                    if(networkLayer["physicalLayer"]){
+                        $div.append(networkLayer["physicalLayer"].getHtmlView());
+                    }
+
+                    return $div;
+                };
+
+                this.getLayerInfo= function(){
+                    /*
+                        函数返回设备中集成的各网络层视图中的数据.
+                        数据结构为.
+                        {
+                            "physicalLayer": {}, 
+                            "networkLayer": {}, 
+                            ...
+                        }
+                    */
+                    var info= {};
+
+                    for(layer in networkLayer){
+                        info[layer]= networkLayer[layer].getLayerInfo();
+                    }
+
+                    return info;
+                };
+
+                this.setLayerInfo= function(info){
+                    for(layer in info){
+                        networkLayer[layer].updateHtmlView(info[layer]);
+                    }
+                };
+
+                this.compareID= function(id){
+                     if(ID== id){
+                          return true;
+                     }else{
+                          return false;
+                     }
+                }
+
+                var ControllerInterface= undefined;
+                this.registerControllerInterface= function(interface){
+                     ControllerInterface= interface;
+                };
+
+                //使用object使其成为可变对象, 通过传入函数即可改变自身.
+                var mouseDownPointer= { 
+                    x: 0,
+                    y: 0
+                };
+
+                this.bindEvent= function(){
+                    /*
+                        该函数用于为设备视图绑定事件.
+                        绑定事件为: $novelRouteView的mousedown, click, mouseup, 以及
+                        $wrapper的mousedown, click, mouseup.
+
+                        主要提供的操作时, 放大缩小功能, 通过最外层的$novelRouetView提供.
+                        拖动功能, 通过里层的$wrapper提供.
+                        点击功能, 分为左键单击, 右键单击功能, 通过里层的$wrapper提供.
+                    */
+                     
+
+                    $novelRouteView.mousedown(novelRouteViewMouseDown);
+
+                    $wrapper.mousedown(wrapperMouseDown);
+
+                    $wrapper.mouseenter(wrapperMouseEnter);
+
+                    $wrapper.mouseleave(wrapperMouseLeave);
+                };
+
+                var novelRouteViewMouseDown= function(e){
+                    var $this= $(this);
+                    var event= e|| window.event;
+                    mouseDownPointer.x= parseInt(event.pageX);
+                    mouseDownPointer.y= parseInt(event.pageY);
+
+                    ControllerInterface.deviceOuterMouseDownCallback(ID);
+                    return false;
+                };
+
+                var wrapperMouseDown= function(e){
+                    var $this= $(this);
+                    var event= e|| window.event;
+                    mouseDownPointer.x= parseInt(event.pageX);
+                    mouseDownPointer.y= parseInt(event.pageY);
+
+                    if(event.which=== 1){
+                        $wrapper.click(wrapperClick); //绑定的位置比较特殊. wrapperClick注释中有原因.
+                    }else if(event.which=== 3){
+                        ControllerInterface.deviceRightMouseDownCallback(e, ID);
+                    }
+
+                    ControllerInterface.deviceInnerMouseDownCallback(ID);
+                    return false;
+                };
+
+                var wrapperClick= function(e){
+                    /*
+                        click事件函数比较特殊. 因为移动对象后, 放开鼠标一样会触发click函数.
+                        所以需要让click函数式一次性的. 即执行一次后自行解绑, 在mousedown时再绑定.
+                        如果mousemove执行, 需要解绑click.
+                    */
+                    var $this= $(this);
+                    var event= e|| window.event;
+
+                    if(event.which=== 1){
+                        //左键点击事件.
+                        ControllerInterface.deviceClickCallback(ID);
+                    }
+
+                    $this.unbind("click");
+                    return false;
+                };
+
+                var wrapperMouseEnter= function(e){
+                    return false;
+                };
+
+                var wrapperMouseLeave= function(e){
+                    return false;
+                };
+
+                this.unbindViewMouseEnter= function(){
+                    $wrapper.unbind("mouseenter");
+                };
+
+                this.unbindViewMouseLeave= function(){
+                    $wrapper.unbind("mouseleave");
+                };
+
+                this.unbindViewMouseDown= function(){
+                    $novelRouteView.unbind("mousedown");
+                    $wrapper.unbind("mousedown");
+                };
+
+                this.unbindViewClick= function(){
+                    $wrapper.unbind("click");
+                };
+
+                this.restoreViewMouseEnter= function(){
+                    $wrapper.mouseenter(wrapperMouseEnter);
+                };
+
+                this.restoreViewMouseLeave= function(){
+                    $wrapper.mouseleave(wrapperMouseLeave);
+                };
+
+                this.restoreViewMouseDown= function(){
+                    $novelRouteView.mousedown(novelRouteViewMouseDown);
+                    $wrapper.mousedown(wrapperMouseDown);
+                };
+
+                this.restoreViewClick= function(){
+                    $wrapper.click(wrapperClick);
+                };
+
+                this.registerViewMouseUp= function(func){
+                    $htmlView.mouseup(func);
+                };
+
+                this.unbindMouseUp= function(){
+                    $htmlView.unbind("mouseup");
+                };
+
+                this.scale= function(e){
+                    var event= e|| window.event;
+                    var nowPointer= {
+                       x: event.pageX,
+                       y: event.pageY
+                    };
+                    var width= parseInt($htmlView.css('width'));
+                    var height= parseInt($htmlView.css('height'));
+                    $htmlView.css('width', (width+ nowPointer.x- mouseDownPointer.x)+ 'px');
+                    $htmlView.css('height', (height+ nowPointer.y- mouseDownPointer.y)+ 'px');
+                    mouseDownPointer.x= nowPointer.x;
+                    mouseDownPointer.y= nowPointer.y;
+                };
+
+                this.move= function(e){
+                    var event= e|| window.event;
+                    var $parent= $htmlView.parent();
+                    var nowPointer= {
+                       x: event.pageX,
+                       y: event.pageY
+                    };
+                    var left= parseInt($parent.css('left'));
+                    var top= parseInt($parent.css('top'));
+
+                    $parent.css('left', (left+ nowPointer.x- mouseDownPointer.x)+ 'px');
+                    $parent.css('top', (top+ nowPointer.y- mouseDownPointer.y)+ 'px');
+                    mouseDownPointer.x= nowPointer.x;
+                    mouseDownPointer.y= nowPointer.y;
+                };
+
+                this.getCenteralPosition= function(){
+                    /*
+                        该函数用于返回设备的中心位置坐标.
+                        返回值为对象. 对象包含x坐标, y坐标.
+                    */
+
+                    var left= parseInt($htmlView.css("left"));
+                    var top= parseInt($htmlView.css("top"));
+                    var width= parseInt($htmlView.css("width"));
+                    var height= parseInt($htmlView.css("height"));
+                    return {
+                        x: left+ width/ 2,
+                        y: top+ height/ 2
+                    }
+                };
+
+                var $htmlView= $(
+                    "<div class= 'novelRouteView'>"+
+                        "<div class= 'wrapper'>"+
+                            "<div class= 'routeView'>"+
+                                "<img src='/media/image/route.jpg' class= 'routeImg'>"+
+                                "<p>设备</p>"+
+                            "</div>"+
+                        "</div>"+
+                    "</div>");
+                var $novelRouteView= $htmlView;
+                var $wrapper= $htmlView.find(".wrapper");
+            },
+            Segement: function(){
+                var typeDict= {
+                    "cable": CreateCableSegement
+                };
+                var cableSegement= function(){
                     /*
                          有线网段, 通过实线表示.
                          有线网络的特点是不存在物理层层面的延迟和信号损耗.
@@ -835,6 +858,7 @@
 
                     var ID= undefined;
                     var viewName= undefined;
+                    var type= "cable";
 
                     //通过矩形对角顶点的两组坐标, 可以计算出矩形的左上角坐标, 矩形的高宽. 即线段容器的位置, 长宽信息.
                     var originX= undefined, originY= undefined; //两个变量记录了视图的初始位置信息.
@@ -843,16 +867,26 @@
                     var strokeWidth= 1; //canvas中画笔的宽度.
 
                     this.getID= function(){
-                         return ID;
+                        return ID;
                     };
                     this.setID= function(id){
-                         ID= id;
+                        ID= id;
                     };
                     this.getViewName= function(){
-                         return viewName;
+                        return viewName;
                     };
                     this.setViewName= function(viewName){
-                         viewName= viewName;
+                        viewName= viewName;
+                    };
+                    this.getType= function(){
+                        return type;
+                    };
+                    this.compareID= function(id){
+                        if(ID=== id){
+                            return true;
+                        }else{
+                            return false;
+                        }
                     };
 
                     var $htmlView= $(
@@ -860,6 +894,7 @@
                             "<canvas></canvas>"+
                         "</div>"
                     );
+
                     var context= $htmlView.find("canvas").get(0).getContext("2d");
                     context.lineWidth= 1;
                     context.strokeStyle= "rgba(0, 0, 0, 1)";
@@ -1038,12 +1073,37 @@
                             当鼠标离开线段上下10ox区域时, 需要改变状态变量, 将线段设置为不可点击状态, 并且在外观上还原, 停止监听mousemove.
                         */
 
-                        $htmlView.mouseenter(function(e){
-                            var event= e|| window.event;
-                            var state= false; //确定鼠标是否在范围内.
-                            if(isInZone(parseInt(event.pageX), parseInt(event.pageY))){ //在范围内, 需要改变样式. 并监听点击事件.
-                                state= true;
+                        $htmlView.mouseenter(mouseEnter);
 
+                        $htmlView.mouseleave(mouseLeave);
+                    };
+
+                    var mouseEnter= function(e){
+                        var event= e|| window.event;
+                        var state= false; //确定鼠标是否在范围内.
+                        if(isInZone(parseInt(event.pageX), parseInt(event.pageY))){ //在范围内, 需要改变样式. 并监听点击事件.
+                            state= true;
+
+                            $htmlView.click(function(e){
+                                //...
+                                alert("点击到了!");
+                                return false;
+                            });
+
+                            updateHoverStyle();
+                        }
+
+                        $htmlView.mousemove(function(e){
+                            var event= e|| window.event;
+                            if(!isInZone(parseInt(event.pageX), parseInt(event.pageY))&& state){
+                                //鼠标不在范围内, 并且原来状态在范围内时, 说明鼠标离开了范围.
+                                state= false;
+                                $htmlView.unbind("click");
+
+                                cancelHoverStyle();
+                            }else if(isInZone(parseInt(event.pageX), parseInt(event.pageY))&& !state){
+                                //鼠标在范围内, 并且原来状态不在范围内时, 鼠标进入了范围.
+                                state= true;
                                 $htmlView.click(function(e){
                                     //...
                                     alert("点击到了!");
@@ -1052,43 +1112,46 @@
 
                                 updateHoverStyle();
                             }
-
-                            $htmlView.mousemove(function(e){
-                                var event= e|| window.event;
-                                if(!isInZone(parseInt(event.pageX), parseInt(event.pageY))&& state){
-                                    //鼠标不在范围内, 并且原来状态在范围内时, 说明鼠标离开了范围.
-                                    state= false;
-                                    $htmlView.unbind("click");
-
-                                    cancelHoverStyle();
-                                }else if(isInZone(parseInt(event.pageX), parseInt(event.pageY))&& !state){
-                                    //鼠标在范围内, 并且原来状态不在范围内时, 鼠标进入了范围.
-                                    state= true;
-                                    $htmlView.click(function(e){
-                                        //...
-                                        alert("点击到了!");
-                                        return false;
-                                    });
-
-                                    updateHoverStyle();
-                                }
-                                return false;
-                            });
                             return false;
                         });
-
-                        $htmlView.mouseleave(function(e){
-                            $htmlView.unbind("mousemove");
-                            $htmlView.unbind("click");
-                            cancelHoverStyle();
-                            return false;
-                        });
+                        return false;
                     };
-               };
-               this.CreateCableSegement= function(){
+
+                    var mouseLeave= function(e){
+                        $htmlView.unbind("mousemove");
+                        $htmlView.unbind("click");
+                        cancelHoverStyle();
+                        return false;
+                    };
+
+                    this.unbindViewMouseEnter= function(){
+                        $htmlView.unbind("mouseenter");
+                    };
+
+                    this.unbindViewMouseLeave= function(){
+                        $htmlView.unbind("mouseleave");
+                    };
+
+                    this.restoreViewMouseEnter= function(){
+                        $htmlView.mouseenter(mouseEnter);
+                    };
+
+                    this.restoreViewMouseLeave= function(){
+                        $htmlView.mouseleave(mouseLeave);
+                    };
+                };
+                this.CreateCableSegement= function(){
                     return new cableSegement();
-               };
-          }
-     };
-     window.novelView= novelView;
+                };
+
+                this.CreateViewByType= function(type){
+                    var initFunction= typeDict[type]; //获取对应的构造函数.
+                    if(initFunction){
+                        return initFunction();
+                    }
+                    return false;
+                };
+            }
+    };
+    window.novelView= novelView;
 })();

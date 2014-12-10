@@ -9,10 +9,12 @@
 (function(){
     var util= window.novelUtil;
     var $labContainer= undefined; //实验平台的具体容器. 必须是jquery对象. 今后的设备将添加至该容器.
-    var IDArray= []; //这个数组存放了所有设备唯一的ID号, 当前有多少台设备, 数组就应该有多少个元素.
+    var IDArray= []; //这个数组存放了所有设备唯一的ID号, 当前有多少台设备和线段, 数组就应该有多少个元素.
     var modelIDArray= []; 
-    var modelArray= []; //这个数组存放了所有的已注册成功设备的模型.
-    var viewArray= []; //这个数组存放了所有的已注册成功设备的视图.
+    var deviceModelArray= []; //这个数组存放了所有的已注册成功设备的模型.
+    var deviceViewArray= []; //这个数组存放了所有的已注册成功设备的视图.
+    var segViewArray= []; //这个数组存放了所有的已注册成功线段的视图.
+    var segModelArray= []; //这个数组存放了所有的已注册成功线段的模型.
     var rightClickPointer= undefined; //这个对象存放了当鼠标右击设备时的坐标.
 
 
@@ -21,21 +23,184 @@
             这个接口对象用于提供给设备视图. 使设备视图能够调用controller的某些功能.
         */
 
-        //使视图能够改变控制器对mousemove的事件.
-        this.changeMouseMoveCallback= function(func){
-            if($labContainer){      
-                $labContainer.unbind("mousemove");
-                $labContainer.mousemove(func);
-            }
-        };
+        this.deviceOuterMouseDownCallback= function(ID){
+            /*
+                视图外部受到点击时, 即需要放大缩小对象.
+                这时, 对象可能会移动到别的对象上方. 需要取消其他对象的事件监听.
+                所以需要将控制权交给controller.
 
-        //使视图能够还原控制器对mousemove的事件.
-        this.restoreMoveCallback= function(){
-            if($labContainer){
-                $labContainer.css('cursor', 'default');
-                $labContainer.unbind("mousemove");
-                $labContainer.mousemove(mouseMoveCallback);
+                1. 取消其他事件函数的监听.
+                2. 取消该视图函数对click的监听.
+                3. 增加labcontainer对mousemove, mouseup的监听. 调整大小的接口为scale
+                4. 还原事件.
+            */
+
+            var restoreClick= true;
+            var view= undefined;
+            for(var i= 0; i< deviceViewArray.length; i++){
+                if(deviceViewArray[i].compareID(ID)){
+                    view= deviceViewArray[i];
+                    break;
+                }
             }
+            if(view== undefined){
+                return false;
+            }
+
+            var unbindEvent= function(){
+                // 1
+                for(var i= 0; i< deviceViewArray.length; i++){
+                    var device= deviceViewArray[i];
+                    if(!device.compareID(ID)){
+                        device.unbindViewMouseDown(); //防止按了鼠标左键后, 又按下了右键.
+                        device.unbindViewMouseEnter();
+                        device.unbindViewMouseLeave();
+                    }
+                }
+
+                for(var i= 0; i< segViewArray.length; i++){
+                    var seg= segViewArray[i];
+                    seg.unbindViewMouseEnter();
+                    seg.unbindViewMouseLeave();
+                }
+
+                // 2
+                view.unbindViewMouseEnter();
+                view.unbindViewMouseLeave();
+                view.unbindViewClick();
+            };
+
+            var restoreEvent= function(){
+                for(var i= 0; i< deviceViewArray.length; i++){
+                    var device= deviceViewArray[i];
+                    if(!device.compareID(ID)){
+                        device.restoreViewMouseDown(); //防止按了鼠标左键后, 又按下了右键.
+                        device.restoreViewMouseEnter();
+                        device.restoreViewMouseLeave();
+                    }
+                }
+
+                for(var i= 0; i< segViewArray.length; i++){
+                    var seg= segViewArray[i];
+                    seg.restoreViewMouseEnter();
+                    seg.restoreViewMouseLeave();
+                }
+
+                view.restoreViewMouseEnter();
+                view.restoreViewMouseLeave();
+                if(restoreClick){
+                    view.restoreViewClick();
+                }
+
+                $labContainer.unbind("mousemove");
+                $labContainer.unbind("mouseup");
+            };
+
+            unbindEvent();
+
+            $labContainer.mousemove(function(e){
+                var event= e|| window.event;
+                restoreClick= false;
+                view.scale(event); //调用缩放函数, 计算最新的大小.
+                return false;
+            });
+
+            $labContainer.mouseup(function(e){
+                var event= e|| window.event;
+                view.scale(event);
+                restoreEvent();
+                return false;
+            });
+        };  
+
+        this.deviceInnerMouseDownCallback= function(ID){
+            /*
+                视图内部受到点击时, 即需要移动对象.
+                这时, 对象可能会移动到别的对象上方. 需要取消其他对象的事件监听.
+                所以需要将控制权交给controller.
+
+                1. 取消其他事件函数的监听.
+                2. 取消该视图函数对click的监听.
+                3. 增加labcontainer对mousemove, mouseup的监听. 移动的接口为move.
+                4. 还原事件.
+            */
+
+            var restoreClick= true; //判断是否需要恢复click事件. 原因在novelView.Device的wrapperClick函数中.
+            var view= undefined;
+            for(var i= 0; i< deviceViewArray.length; i++){
+                if(deviceViewArray[i].compareID(ID)){
+                    view= deviceViewArray[i];
+                    break;
+                }
+            }
+            if(view== undefined){
+                return false;
+            }
+
+            var unbindEvent= function(){
+                // 1
+                for(var i= 0; i< deviceViewArray.length; i++){
+                    var device= deviceViewArray[i];
+                    if(!device.compareID(ID)){
+                        device.unbindViewMouseDown(); //防止按了鼠标左键后, 又按下了右键.
+                        device.unbindViewMouseEnter();
+                        device.unbindViewMouseLeave();
+                    }
+                }
+
+                for(var i= 0; i< segViewArray.length; i++){
+                    var seg= segViewArray[i];
+                    seg.unbindViewMouseEnter();
+                    seg.unbindViewMouseLeave();
+                }
+
+                // 2
+                view.unbindViewMouseEnter();
+                view.unbindViewMouseLeave();
+                view.unbindViewClick();
+            };
+
+            var restoreEvent= function(){
+                for(var i= 0; i< deviceViewArray.length; i++){
+                    var device= deviceViewArray[i];
+                    if(!device.compareID(ID)){
+                        device.restoreViewMouseDown(); //防止按了鼠标左键后, 又按下了右键.
+                        device.restoreViewMouseEnter();
+                        device.restoreViewMouseLeave();
+                    }
+                }
+
+                for(var i= 0; i< segViewArray.length; i++){
+                    var seg= segViewArray[i];
+                    seg.restoreViewMouseEnter();
+                    seg.restoreViewMouseLeave();
+                }
+
+                view.restoreViewMouseEnter();
+                view.restoreViewMouseLeave();
+                if(restoreClick){
+                    view.restoreViewClick();
+                }
+
+                $labContainer.unbind("mousemove");
+                $labContainer.unbind("mouseup");
+            };
+
+            unbindEvent();
+
+            $labContainer.mousemove(function(e){
+                var event= e|| window.event;
+                restoreClick= false;
+                view.move(event); //调用缩放函数, 计算最新的大小.
+                return false;
+            });
+
+            $labContainer.mouseup(function(e){
+                var event= e|| window.event;
+                view.move(event);
+                restoreEvent();
+                return false;
+            });
         };
 
         //使视图受到点击时, 能够通过控制器完成配置菜单的显示.
@@ -45,13 +210,15 @@
                 配置界面需要根据设备模型具体生成.
                 参数ID可以找到相应的设备模型.
                 无返回值, 但是需要将配置结果写入设备模型.
+
+                *** 需要解除该对象的click事件绑定!!!  防止多次调出对话框.
             */
 
             //先找到相应的设备模型.
             var model= undefined;
-            for(var i= 0; i< modelArray.length; i++){
-                if(modelArray[i].compareID(ID)){
-                    model= modelArray[i];
+            for(var i= 0; i< deviceModelArray.length; i++){
+                if(deviceModelArray[i].compareID(ID)){
+                    model= deviceModelArray[i];
                     break;
                 }
             }
@@ -61,9 +228,9 @@
 
             //再找到相应的设备视图.
             var view= undefined;
-            for(var i= 0; i< viewArray.length; i++){
-                if(viewArray[i].compareID(ID)){
-                    view= viewArray[i];
+            for(var i= 0; i< deviceViewArray.length; i++){
+                if(deviceViewArray[i].compareID(ID)){
+                    view= deviceViewArray[i];
                     break;
                 }
             }
@@ -71,102 +238,136 @@
                 return false;
             }
 
-            var $config= $configHtmlHead.clone(); //复制一个副本.
+            var $dialog= CreateFloatDetailedInfoDialog(); //建立对话框.          
 
-            /*
-                先从设备模型获取相应的网络信息, 网络信息放置于数组中, 使得信息有先后关系, 在前的则显示也在前.
-                获取到网络信息后, 再去设备视图获取显示信息, 将两者结合, append到config中.
-            */
-            var modelInfo= model.getModelInfo();
-            var viewInfo= view.getViewInfo();
+            //通过调用接口获取html元素, 该元素可以直接放入对话框中.
+            var info= model.getLayerInfo();
+            view.setLayerInfo(info);
+            var $viewInfo= view.getViewInfo();
 
-            //首先填充头部.
-            for(var i= 0; i< $config.find("#headName").length; i++){
-                $($config.find("#headName").get(i)).text(model.getType());
-            }
-            $config.find("#deviceName").val(view.getViewName());
-
-            for(var i= 0; i< modelInfo.length; i++){
-                var info= modelInfo[i];
-
-                //读取对象的键值.
-                for(key in info){
-                    if(viewInfo[key]== undefined){
-                        return false;
-                    }
-                    var modelValue= info[key]; //这里的modelValue还是一个数组.
-                    var viewValue= viewInfo[key]; //对应的设备视图.
-                    for(var j= 0; j< modelValue.length; j++){ //获取所有具体的网络信息.
-                        var mInfo= modelValue[j];
-                        var vInfo= viewValue.clone();                   
-                        for(mKey in mInfo){ //每个网络信息都有自己的属性.
-                            vInfo.find("#"+ mKey).val(mInfo[mKey]); //生成的视图!!!
-                        }
-                        $config.append(vInfo); //添加至末尾.
-                    }
+            $dialog.config({
+                "title": "设备",
+                "body": $viewInfo,
+                "functionalBtnText": "保存",
+                "functionalBtnCallback": function(){
+                    var info= view.getLayerInfo();
+                    model.setLayerInfo(info);
                 }
-            }
-            $config.append($configHtmlFooter.clone()); //最后添加尾部
-            $config.css('display', 'block');
-            $(document.body).append($config);
+            });
         };
-        this.deviceRightClickCallback= function(e, ID){
+
+        this.deviceRightMouseDownCallback= function(e, ID){
             /*
                 当设备自身被右击时, 需要调用该回调, 将控制权交给controller.
                 ID指被单击设备的ID号.
+                controller需要绑定mousemove, mouseup两个事件.
             */
             var event= e|| window.event;
 
             //创建零时的网段. 该对象是网段对象.
-            var $temporarySeg= createSegement(true);
+            var $temporarySeg= createSegementView(true);
+
+            //设置网段对象的初始位置. 不显示图形位置.
             $temporarySeg.setPosition(parseInt(event.pageX), parseInt(event.pageY), false);
             $labContainer.append($temporarySeg.getHtmlView());
 
-            //然后接管mousemove事件.
-            $labContainer.mousemove(function(e){
-                var event= e|| window.event;
-                $temporarySeg.setPosition(parseInt(event.pageX), parseInt(event.pageY), true);
-            });
+            var unbindEvent= function(){
+                /*
+                    这里执行夺取设备, 线段视图的控制权的函数.
+                    夺取通过视图提供的接口进行.
+                */
 
-            var restore= function(){
-                $labContainer.unbind("mousemove");
-                $labContainer.unbind("mouseup");
-                for(var i= 0; i< viewArray.length; i++){
-                    viewArray[i].restoreViewMouseUp();
+                for(var i= 0; i< deviceViewArray.length; i++){
+                    deviceViewArray[i].unbindViewMouseDown(); //鼠标点击右键时, 还能点击左键. 这里防止用户做出类似行为.
+                    deviceViewArray[i].unbindViewMouseEnter();
+                    deviceViewArray[i].unbindViewMouseLeave();
+
+                    //不需要解绑click. 右键mousedown不会绑click.
+                }
+
+                for(var i= 0; i< segViewArray.length; i++){
+                    segViewArray[i].unbindViewMouseEnter(); 
+                    segViewArray[i].unbindViewMouseLeave();
                 }
             };
 
+            var restoreEvent= function(){
+                /*
+                    还原函数.
+                    controller交出控制权.
+                */
+                
+                for(var i= 0; i< deviceViewArray.length; i++){
+                    //这里还原各个设备的监听事件.
+                    deviceViewArray[i].restoreViewMouseDown();
+                    deviceViewArray[i].restoreViewMouseEnter();
+                    deviceViewArray[i].restoreViewMouseLeave();
+                    deviceViewArray[i].unbindMouseUp();
+                }
+
+                for(var i= 0; i< segViewArray.length; i++){
+                    segViewArray[i].restoreViewMouseEnter();
+                    segViewArray[i].restoreViewMouseLeave();
+                }
+
+                $labContainer.unbind("mousemove");
+                $labContainer.unbind("mouseup");
+            };
+
+            //解除设备, 线段自身的监听事件.
+            unbindEvent();
+
+            //然后接管mousemove事件.
+            $labContainer.mousemove(function(e){
+                /*
+                    mousemove事件决定线段的另一个端点.
+                */
+                var event= e|| window.event;
+                $temporarySeg.setPosition(parseInt(event.pageX), parseInt(event.pageY), true);
+                return false;
+            });
+
+            //接管mouseup事件.
             $labContainer.mouseup(function(e){
                 /*
                     没有在设备内抬起鼠标, 该线段需要删除.
                 */
                 $temporarySeg.removeHtmlView();
                 //还原原来的抬起事件.
-                restore();
+                restoreEvent();
                 return false;
             });
 
-            //改变设备的mouseup事件. 并且在body捕捉mouseup事件.(如果捕捉到, 说明没有在设备上放开, 不是有效的网段)
-            for(var i= 0; i< viewArray.length; i++){
-                var view= viewArray[i];
-                view.changeViewMouseUp(function(e){
+            //注册设备的mouseup事件. 并且在body捕捉mouseup事件.(如果捕捉到, 说明没有在设备上放开, 不是有效的网段)
+            for(var i= 0; i< deviceViewArray.length; i++){
+                var view= deviceViewArray[i];
+                view.registerViewMouseUp(function(e){
                     /*
                         在设备内抬起了鼠标, 该线段需要保留.
                     */
 
-                    if(view.getID()== ID){
+                    if(view.compareID(ID)){
                         //在原设备上放开了鼠标. 该线段需要删除.
                         $temporarySeg.removeHtmlView();
                         //还原原来的抬起事件.
-                        restore();
+                        restoreEvent();
                         return false;
                     }
 
-                    //保留该线段的操作.
-                    //先调整位置
-                    for(var j= 0; j< viewArray.length; j++){
-                        if(viewArray[j].compareID(ID)){ //是原始设备.
-                            var centeralPosition= viewArray[j].getCenteralPosition();
+                    /*
+                        保留该线段的操作.
+                        1. 先调整位置.
+                        2. 为线段申请ID.
+                        3. 为线段绑定事件.
+                        4. 创建线段模型对象.
+                        5. 添加线段至列表.
+                        6. 为线段添加与设备的映射关系. (当设备删除时, 线段删除时, 设备移动时都需使用该映射关系)
+                    */
+
+                    // 1
+                    for(var j= 0; j< deviceViewArray.length; j++){
+                        if(deviceViewArray[j].compareID(ID)){ //是原始设备.
+                            var centeralPosition= deviceViewArray[j].getCenteralPosition();
                             $temporarySeg.moveOrigin(centeralPosition.x, centeralPosition.y);
                             centeralPosition= view.getCenteralPosition();
                             $temporarySeg.setPosition(centeralPosition.x, centeralPosition.y, true);
@@ -174,11 +375,32 @@
                         }
                     }
 
-                    //为线段绑定事件.
+                    // 2
+                    ID= util.getID(IDArray); //获取新的可用ID, 这时, ID指新申请到的ID.
+                    if(!util.registerID(ID, IDArray)){
+                        //注册ID出错, 该线段不能保留.
+                        $temporarySeg.removeHtmlView();
+                        restoreEvent();
+                        return false;
+                    }
+
+                    // 3
                     $temporarySeg.bindEvent();
 
-                    //还原原来的抬起事件.
-                    restore();
+                    // 4
+                    var model= createSegementModel($temporarySeg);
+                    $temporarySeg.setID(ID);
+                    model.setID(ID);
+
+                    // 5
+                    segViewArray.push($temporarySeg);
+                    segModelArray.push(model);
+
+                    // 6
+                    // 还没想好怎么写...
+
+                    //还原原来的事件.
+                    restoreEvent();
                     return false;
                 });
             }
@@ -189,18 +411,26 @@
         return false;
     }
 
-    var createSegement= function(temporary){
+    var createSegementView= function(type){
         /*
             该函数用于创建网段.
-            输入temporary确定是否创建的是零时网段. 零时网段将只包含view, 不包含model以及id等具体信息.
             需要返回一个网段对象.
         */
-        if(temporary|| temporary=== null ){ //temporary默认为true
-            var view= new novelView.Segement().CreateCableSegement();
-            return view;
-        }
+        var view= new novelView.Segement().CreateViewByType(type);
+        return view;
     };  
 
+    var createSegementModel= function(view){
+        /*
+            该函数用于创建网段的模型对象.
+            传入的线段视图用于进行模型对象匹配.
+            最终生成的是对应于视图对象的模型对象.
+        */
+
+        var type= view.getType();
+        var model= new novelModel.Segement().CreateModelByType(type);
+        return model;
+    };
 
     var novelController= {      
         createDevice: function(model, view){
@@ -235,11 +465,7 @@
             model.setModelID(modelID);
             view.setViewName(modelID);
 
-            var $htmlView= view.getHtmlView(); //getHtmlView是view的必须接口, 用于返回view的样式, 该样式将被append到容器中.
-            if(!util.testjQuery($htmlView)){
-                return false;
-            }
-            $labContainer.append($htmlView);
+            view.appendToDocument($labContainer);
 
             /*
                 绑定事件. 由于视图本身缺乏处理一些问题的能力, 需要通过控制器完成. 
@@ -252,8 +478,8 @@
                 view.registerControllerInterface(new InterfaceForView());
             }
 
-            modelArray.push(model);
-            viewArray.push(view);
+            deviceModelArray.push(model);
+            deviceViewArray.push(view);
             return true;
         },
         bindContainer: function(obj){

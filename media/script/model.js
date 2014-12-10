@@ -38,17 +38,25 @@
 			*/
 
 			//物理层数据结构.
-			// var physicalLayerInfo= {
-			// 	"type": undefined，
-			// 	"bindWidth": undefined，
-			// 	"delay": undefined
-			// };
-
-			this.setPhysicalLayerInfo= function(view){
-				physicalLayerInfo= view.getPhysicalLayerInfo();
+			var physicalLayerInfo= {
+				"type": false,
+				"bindWidth": false,
+				"delay": false
 			};
 
-			this.getPhysicalLayerInfo= function(){
+			this.setLayerInfo= function(info){
+				if(info.type!== undefined){
+					physicalLayerInfo.type= info.type;
+				}
+				if(info.bindWidth!== undefined){
+					physicalLayerInfo.bindWidth= info.bindWidth;
+				}
+				if(info.delay!== undefined){
+					physicalLayerInfo.delay= info.delay;
+				}
+			};
+
+			this.getLayerInfo= function(){
 				return physicalLayerInfo;
 			};
 		},
@@ -58,40 +66,107 @@
 				网络层将集成到设备中. 网络层目前将默认使用主流的IPv4协议.(IPv6协议可以考虑后期加入)
 				网络层对于不同的设备将由不同的数据结构存储, 可分为主机设备, 路由设备两种.
 				在模型中, 网络层对象的作用是存储一个对象的信息.
-
-				网卡的数据结构
-				var hostIPv4NetworkLayerInfo= {
-					"name": undefined, //网段名称
-					"ipAddress": undefined,
-					"maskAddress": undefined,
-					"targetRouteAddress": undefined
-				};
 			*/
 			var hostIPv4NetworkLayer= function(){
+				/*
+					网卡的数据结构
+					var hostIPv4NetworkLayerInfo= {
+						"name": undefined, //网段名称
+						"ipAddress": undefined,
+						"maskAddress": undefined,
+						"targetRouteAddress": undefined
+					};
+				*/
+
 				var hostIPv4NetworkLayerInfoContainer= [];
 
-				this.setNetworkLayerInfo= function(view){
-					hostIPv4NetworkLayerInfoContainer= view.getNetworkLayerInfo();
+				this.setLayerInfo= function(info){
+					hostIPv4NetworkLayerInfoContainer= []; //先清空容器. 因为有可能发生删除网卡.
+					for(var i= 0; i< info.length; i++){
+						var data= {};
+						data.name= info[i].name!== undefined? info[i].name: false;
+						data.ipAddress= info[i].ipAddress!== undefined? info[i].ipAddress: false;
+						data.maskAddress= info[i].maskAddress!== undefined? info[i].maskAddress: false;
+						data.targetRouteAddress= info[i].targetRouteAddress!== undefined? info[i].targetRouteAddress: false;
+						hostIPv4NetworkLayerInfoContainer.push(data);
+					}
 				};
 
-				this.getNetworkLayerInfo= function(){
+				this.getLayerInfo= function(){
 					return hostIPv4NetworkLayerInfoContainer;
 				};
 			};
 
 			var routeIPv4NetworkLayer= function(){
+				/*
+					网卡的数据结构.
+					var routeIPv4NetworkLayerInfo= [{
+						"name": false, //网卡名称
+						"ipAddress": false,
+						"maskAddress": false,
+						"routeTable": [{ 网卡对应的路由表
+	                            "targetRouteAddress": "", 目标路由地址
+	                            "maskAddress": "", 子网掩码
+	                            "nextSkip": "" 下一跳地址
+	                        }, ...]
+					}, ...];
+				*/
 
+				var routeIPv4NetworkLayerInfoContainer= [];
+
+				this.setLayerInfo= function(info){
+					for(var i= 0; i< info.length; i++){
+						var data= {};
+						data.name= info[i].name!== undefined? info[i].name: false;
+						data.ipAddress= info[i].ipAddress!== undefined? info[i].ipAddress: false;
+						data.maskAddress= info[i].maskAddress!== undefined? info[i].maskAddress: false;
+					}
+				};
+
+				this.getLayerInfo= function(){
+					return routeIPv4NetworkLayerInfoContainer;
+				};
 			};
 
 
 		},	
+		Segement: function(){
+			var typeDict= {
+				"cable": CreateCableSegement
+			};
+			var cableSegement= function(){
+				var ID= undefined;
+				var type= "cable";
 
-		route: function(){
+				this.getID= function(){
+					return ID;
+				};
+				this.setID= function(ID){
+					ID= ID;
+				};
+				this.getType= function(){
+					return type;
+				};
+			};
+			this.CreateCableSegement= function(){
+				return new cableSegement();
+			};
+			this.CreateViewByType= function(type){
+			    var initFunction= typeDict[type]; //获取对应的构造函数.
+			    if(initFunction){
+			        return initFunction();
+			    }
+			    return false;
+			};
+		},
+
+		Device: function(){
 			var ID= undefined; //唯一的ID号, 唯一的标示. 字符串类型.
-			var modelID= undefined;
-			var type= '路由';
-			var portArray= []; //维护了路由器所有端口的信息. 存放的是portInfoModel对象.
-			var routeTableArray= []; //维护了路由器的路由表. 路由表由路由表项组成, 即RouteTbaleInfoModel对象.
+			var type= '设备';
+			var networkLayer= {
+				"physicalLayer": false,
+				"networkLayer": false
+			};
 
 			this.setID= function(id){
 				/*
@@ -99,25 +174,42 @@
 				*/
 				ID= id;
 			};
+
 			this.getID= function(){
 				/*
 					该函数返回对象唯一的ID.
 				*/
 				return ID;
-			}
-			this.setModelID= function(id){
-				modelID= id;
 			};
+
 			this.getType= function(){
 				return type;
 			};
+
 			this.compareID= function(id){
-				if(ID== id){
+				if(ID=== id){
 					return true;
 				}else{
 					return false;
 				}
-			}
+			};
+
+			this.extendNetworkLayer= function(dict){
+                for(layer in dict){
+                    if(dict.hasOwnProperty(layer)){
+                        networkLayer[layer]= dict[layer];
+                    }
+                }
+            };
+
+			this.getLayerInfo= function(){
+
+			};
+
+			this.setLayerInfo= function(info){
+
+			};
+
 			this.getModelInfo= function(){
 				/*
 					该函数返回设备模型所支持的网络信息组件.
