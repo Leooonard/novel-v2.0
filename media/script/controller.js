@@ -15,6 +15,17 @@
     var deviceViewArray= []; //这个数组存放了所有的已注册成功设备的视图.
     var segViewArray= []; //这个数组存放了所有的已注册成功线段的视图.
     var segModelArray= []; //这个数组存放了所有的已注册成功线段的模型.
+
+    /*
+        这个数组存放了所有的已注册成功的线段和设备的映射关系.
+        数据结构为:
+        {
+            "segID": , //线段的ID号.
+            "srcDeviceID": , //源设备的ID号.
+            "tarDeviceID": , //目标设备的ID号.
+        }
+    */
+    var segDeviceArray= []; 
     var rightClickPointer= undefined; //这个对象存放了当鼠标右击设备时的坐标.
 
 
@@ -31,8 +42,9 @@
 
                 1. 取消其他事件函数的监听.
                 2. 取消该视图函数对click的监听.
-                3. 增加labcontainer对mousemove, mouseup的监听. 调整大小的接口为scale
-                4. 还原事件.
+                3. 获取与设备相关的线段. 需要及时调整他们的位置.
+                4. 增加labcontainer对mousemove, mouseup的监听. 调整大小的接口为scale
+                5. 还原事件.
             */
 
             var restoreClick= true;
@@ -98,16 +110,42 @@
 
             unbindEvent();
 
+            var segArray= [];
+            if(isDeviceWithSegement(view.getID())){
+                //该设备与线段相连.
+                segArray= getSegementArrayByDeviceID(ID);
+            }
+
             $labContainer.mousemove(function(e){
                 var event= e|| window.event;
                 restoreClick= false;
                 view.scale(event); //调用缩放函数, 计算最新的大小.
+                for(var i= 0; i< segArray.length; i++){
+                    var seg= segArray[i];
+                    if(seg.isSrcDevice){
+                        var centeralPosition= view.getCenteralPosition();
+                        seg.segView.moveOrigin(centeralPosition.x, centeralPosition.y, true);
+                    }else{ 
+                        var centeralPosition= view.getCenteralPosition();
+                        seg.segView.setPosition(centeralPosition.x, centeralPosition.y, true);
+                    }
+                }
                 return false;
             });
 
             $labContainer.mouseup(function(e){
                 var event= e|| window.event;
                 view.scale(event);
+                for(var i= 0; i< segArray.length; i++){
+                    var seg= segArray[i];
+                    if(seg.isSrcDevice){
+                        var centeralPosition= view.getCenteralPosition();
+                        seg.segView.moveOrigin(centeralPosition.x, centeralPosition.y, true);
+                    }else{ 
+                        var centeralPosition= view.getCenteralPosition();
+                        seg.segView.setPosition(centeralPosition.x, centeralPosition.y, true);
+                    }
+                }
                 restoreEvent();
                 return false;
             });
@@ -121,8 +159,9 @@
 
                 1. 取消其他事件函数的监听.
                 2. 取消该视图函数对click的监听.
-                3. 增加labcontainer对mousemove, mouseup的监听. 移动的接口为move.
-                4. 还原事件.
+                3. 获取与设备相关的线段. 需要及时调整他们的位置.
+                4. 增加labcontainer对mousemove, mouseup的监听. 移动的接口为move.
+                5. 还原事件.
             */
 
             var restoreClick= true; //判断是否需要恢复click事件. 原因在novelView.Device的wrapperClick函数中.
@@ -188,16 +227,42 @@
 
             unbindEvent();
 
+            var segArray= [];
+            if(isDeviceWithSegement(view.getID())){
+                //该设备与线段相连.
+                segArray= getSegementArrayByDeviceID(ID);
+            }
+
             $labContainer.mousemove(function(e){
                 var event= e|| window.event;
                 restoreClick= false;
                 view.move(event); //调用缩放函数, 计算最新的大小.
+                for(var i= 0; i< segArray.length; i++){
+                    var seg= segArray[i];
+                    if(seg.isSrcDevice){
+                        var centeralPosition= view.getCenteralPosition();
+                        seg.segView.moveOrigin(centeralPosition.x, centeralPosition.y, true);
+                    }else{ 
+                        var centeralPosition= view.getCenteralPosition();
+                        seg.segView.setPosition(centeralPosition.x, centeralPosition.y, true);
+                    }
+                }
                 return false;
             });
 
             $labContainer.mouseup(function(e){
                 var event= e|| window.event;
                 view.move(event);
+                for(var i= 0; i< segArray.length; i++){
+                    var seg= segArray[i];
+                    if(seg.isSrcDevice){
+                        var centeralPosition= view.getCenteralPosition();
+                        seg.segView.moveOrigin(centeralPosition.x, centeralPosition.y, true);
+                    }else{ 
+                        var centeralPosition= view.getCenteralPosition();
+                        seg.segView.setPosition(centeralPosition.x, centeralPosition.y, true);
+                    }
+                }
                 restoreEvent();
                 return false;
             });
@@ -246,14 +311,21 @@
             var $viewInfo= view.getViewInfo();
 
             $dialog.config({
-                "title": "设备",
+                "title": view.getViewName(),
                 "body": $viewInfo,
                 "functionalBtnText": "保存",
                 "functionalBtnCallback": function(){
                     var info= view.getLayerInfo();
+                    view.updateViewName(); //更新小图标上的名字.
+                    $dialog.config({
+                        "title": view.getViewName()
+                    });
                     model.setLayerInfo(info);
                 }
             });
+
+
+            buttonToggle(); //这个很重要!!!
         };
 
         this.deviceRightMouseDownCallback= function(e, ID){
@@ -265,7 +337,7 @@
             var event= e|| window.event;
 
             //创建零时的网段. 该对象是网段对象.
-            var $temporarySeg= createSegementView(true);
+            var $temporarySeg= createSegementView("cable");
 
             //设置网段对象的初始位置. 不显示图形位置.
             $temporarySeg.setPosition(parseInt(event.pageX), parseInt(event.pageY), false);
@@ -339,13 +411,13 @@
             });
 
             //注册设备的mouseup事件. 并且在body捕捉mouseup事件.(如果捕捉到, 说明没有在设备上放开, 不是有效的网段)
-            for(var i= 0; i< deviceViewArray.length; i++){
-                var view= deviceViewArray[i];
+            //用for循环, 会产生闭包问题, 十分麻烦, 使用jquery的工具函数 each来遍历.
+            $.each(deviceViewArray, function(){
+                var view= this;
                 view.registerViewMouseUp(function(e){
                     /*
                         在设备内抬起了鼠标, 该线段需要保留.
                     */
-
                     if(view.compareID(ID)){
                         //在原设备上放开了鼠标. 该线段需要删除.
                         $temporarySeg.removeHtmlView();
@@ -376,9 +448,10 @@
                     }
 
                     // 2
-                    ID= util.getID(IDArray); //获取新的可用ID, 这时, ID指新申请到的ID.
-                    if(!util.registerID(ID, IDArray)){
+                    var segID= util.getID(IDArray); 
+                    if(!util.registerID(segID, IDArray)){
                         //注册ID出错, 该线段不能保留.
+                        alert("ID号不够用了!");
                         $temporarySeg.removeHtmlView();
                         restoreEvent();
                         return false;
@@ -389,22 +462,67 @@
 
                     // 4
                     var model= createSegementModel($temporarySeg);
-                    $temporarySeg.setID(ID);
-                    model.setID(ID);
+                    $temporarySeg.setID(segID);
+                    model.setID(segID);
 
                     // 5
                     segViewArray.push($temporarySeg);
                     segModelArray.push(model);
 
                     // 6
-                    // 还没想好怎么写...
+                    var segDevice= {
+                        "segID": segID,
+                        "srcDeviceID": ID,
+                        "tarDeviceID": view.getID()
+                    };
+                    segDeviceArray.push(segDevice);
 
                     //还原原来的事件.
                     restoreEvent();
                     return false;
                 });
-            }
+            });
         };
+    };
+
+    var isDeviceWithSegement= function(ID){
+        /*
+            测试一个设备是否与线段相连接.
+        */
+        for(var i= 0; i< segDeviceArray.length; i++){
+            if(segDeviceArray[i].srcDeviceID=== ID|| segDeviceArray[i].tarDeviceID=== ID){
+                return true;
+            }
+        }
+        return false;
+    };
+
+    var getSegementArrayByDeviceID= function(ID){
+        /*
+            函数通过一个设备ID, 获取与该设备相连的所有的线段.
+            返回值为数组. 若该设备没有与任何线段相连, 则返回空数组.
+            数据结构为:
+            [{
+                "segView": , //线段视图对象
+                "isSrcDevice": , //表示该设备是否为该线段的源设备
+            }, ...]
+        */
+        var array= [];
+        for(var i= 0; i< segDeviceArray.length; i++){
+            var segDevice= segDeviceArray[i];
+            if(segDevice.srcDeviceID=== ID|| segDevice.tarDeviceID=== ID){ //该线段与设备相关, 找出该设备的视图.
+                for(var j= 0; j< segViewArray.length; j++){
+                    if(segViewArray[j].getID()=== segDevice.segID){
+                        array.push({
+                            "segView": segViewArray[j],
+                            "isSrcDevice": (segDevice.srcDeviceID=== ID)
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+        return array;
     };
 
     var mouseMoveCallback= function(e){
@@ -433,7 +551,7 @@
     };
 
     var novelController= {      
-        createDevice: function(model, view){
+        createDevice: function(view, model){
             /*
                 函数用于创建一个设备, 并将设备ID添加至ID号列表中(ID是设备存在的证据).
                 再申请一个设备ID, 添加至设备ID列表中.
@@ -454,16 +572,6 @@
             //注册成功.
             model.setID(ID); //setID是model, view的必须接口, 用于存储唯一的ID号. 也是model与view间的唯一联系.
             view.setID(ID);
-
-            var modelID= undefined;
-            while(true){ //注册modelID, 如果出错将重复注册, 直到注册成功.
-                modelID= util.getModelID(modelIDArray);
-                if(util.registerModelID(modelID, modelIDArray)){
-                    break;
-                }
-            }
-            model.setModelID(modelID);
-            view.setViewName(modelID);
 
             view.appendToDocument($labContainer);
 
@@ -493,39 +601,23 @@
             }else{
                 return false;
             }
+        },
+        createStaticIPv4Route: function(){
+            /*
+                创建一个已经被定制过的路由对象.
+                该函数的命名规则为, 使用从高层到低层的各层的特点来命名.
+                创建失败返回false, 创建成功返回true.(以后应改为返回某个对象, 让用户有自定义空间)
+            */
+
+            var view= novelView.createStaticIPv4Route();
+            var model= novelModel.createStaticIPv4Route();
+            if(this.createDevice(view, model)){
+                return true;
+            }else{
+                return false;
+            }
         }
     };
-
-    var $configHtmlHead= $("\
-        <section class= 'novelConfig'>\
-            <section>\
-                <h4><span id= 'headName'></span>配置</h4>\
-                <div class='form-group' style= 'margin-bottom: 5px;'>\
-                    <label for='deviceName' class='col-sm-2 control-label'>\
-                        <span id= 'headName'></span>名:\
-                    </label>\
-                    <div class='col-sm-10'>\
-                        <input type='text' class='form-control' id= 'deviceName'>\
-                    </div>\
-                    <div style= 'clear: both;'></div>\
-                </div>\
-                <section>\
-                    <button id= 'finishBtn' class= 'btn btn-primary'>填写完成</button>\
-                    <button id= 'closeBtn' class= 'btn btn-primary'>直接关闭</button>\
-                    <button id= 'deleteBtn' class= 'btn btn-primary'>删除设备</button>\
-                </section>\
-                <hr/>\
-            </section>\
-        </section>\
-    ");
-
-    var $configHtmlFooter= $("\
-        <section id= 'configButtom'>\
-            <button id= 'finishBtn' class= 'btn btn-primary'>填写完成</button>\
-            <button id= 'closeBtn' class= 'btn btn-primary'>直接关闭</button>\
-            <button id= 'deleteBtn' class= 'btn btn-primary'>删除设备</button>\
-        </section>\
-    ");
 
     window.novelController= novelController;
 })();

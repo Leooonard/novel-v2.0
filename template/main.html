@@ -11,14 +11,15 @@
       <script type="text/javascript" src= "/media/script/view.js"></script>  
       <script type="text/javascript" src= "/media/script/util.js"></script>  
       <script type="text/javascript" src= "/media/script/controller.js"></script>  
-      <script type="text/javascript" src= "/media/script/button-toggle.js"></script>
       <script type="text/javascript" src= "/media/script/dialog.js"></script>
+      <script type="text/javascript" src= "/media/script/button-toggle.js"></script>
       <style type="text/css"> 
             .labContainer{
                 width: 1000px;
                 height: 600px;
                 background-color: white;
                 outline: 1px solid red;
+                position: relative;
             }
             .padding20{
                 padding: 20px;
@@ -55,13 +56,13 @@
                 novelController.bindContainer($labContainer);
                 var $createDevice= $("#createDevice");
                 $createDevice.click(function(){
-                    var routeModel= new novelModel.route();
+                    /*var routeModel= new novelModel.route();
                     var routeView= new novelView.Device().CreateRoute();
                     routeView.setStyle({
                         'left': '100px',
                         'top': '200px'
-                    });
-                    novelController.createDevice(routeModel, routeView);
+                    });*/
+                    novelController.createStaticIPv4Route();
                 });
 
                 /*var dialog= CreateFloatDetailedInfoDialog();
@@ -141,36 +142,36 @@
                     return false;
                 });
                 $("#div2").mouseup(function(){
-                	var div1X= parseInt($("#div1").css("left"));
-                	var div1Y= parseInt($("#div1").css("top"));
-                	var div1Width= parseInt($("#div1").css("width"));
-                	var div1Height= parseInt($("#div1").css("height"));
-                	var div1cx= parseInt(div1X+ div1Width/ 2);
-                	var div1cy= parseInt(div1Y+ div1Height/ 2);
-                	var div2X= parseInt($("#div2").css("left"));
-                	var div2Y= parseInt($("#div2").css("top"));
-                	var div2Width= parseInt($("#div2").css("width"));
-                	var div2Height= parseInt($("#div2").css("height"));
-                	var div2cx= parseInt(div2X+ div2Width/ 2);
-                	var div2cy= parseInt(div2Y+ div2Height/ 2);
-                	console.log(div1cx+ " "+ div1cy+ " "+ div2cx+ " "+ div2cy);
-                	if(div1cx< div2cx){
-                		var left= div1cx;
-                	}else if(div1cx== div2cx){
-                		var left= div1cx;
-                	}else{
-                		var left= div2cx;
-                	}
-                	var width= div1cx- div2cx;
-                	if(div1cy< div2cy){
-                		var top= div2cy;
-                	}else if(div1cy== div2cy){
-                		var top= div1cy;
-                	}else{
-                		var top= div1cy;
-                	}
-                	var height= div1cy- div2cy;
-                	$div.css("left", left).css("top", top).css("width", Math.abs(width)).css("height", Math.abs(height));
+                    var div1X= parseInt($("#div1").css("left"));
+                    var div1Y= parseInt($("#div1").css("top"));
+                    var div1Width= parseInt($("#div1").css("width"));
+                    var div1Height= parseInt($("#div1").css("height"));
+                    var div1cx= parseInt(div1X+ div1Width/ 2);
+                    var div1cy= parseInt(div1Y+ div1Height/ 2);
+                    var div2X= parseInt($("#div2").css("left"));
+                    var div2Y= parseInt($("#div2").css("top"));
+                    var div2Width= parseInt($("#div2").css("width"));
+                    var div2Height= parseInt($("#div2").css("height"));
+                    var div2cx= parseInt(div2X+ div2Width/ 2);
+                    var div2cy= parseInt(div2Y+ div2Height/ 2);
+                    console.log(div1cx+ " "+ div1cy+ " "+ div2cx+ " "+ div2cy);
+                    if(div1cx< div2cx){
+                        var left= div1cx;
+                    }else if(div1cx== div2cx){
+                        var left= div1cx;
+                    }else{
+                        var left= div2cx;
+                    }
+                    var width= div1cx- div2cx;
+                    if(div1cy< div2cy){
+                        var top= div2cy;
+                    }else if(div1cy== div2cy){
+                        var top= div1cy;
+                    }else{
+                        var top= div1cy;
+                    }
+                    var height= div1cy- div2cy;
+                    $div.css("left", left).css("top", top).css("width", Math.abs(width)).css("height", Math.abs(height));
                     context.clearRect(0, 0, Math.abs(width), Math.abs(height));
                     if(width> 0&& height< 0){
                          context.moveTo(0, Math.abs(height));
@@ -193,7 +194,7 @@
           <!-- <div id= "div1" style= "width: 100px; height: 100px; position: absolute; left: 100px; top: 100px; background-color: green;">
           </div>
           <div id= "div2" style= "width: 100px; height: 100px; position: absolute; left: 300px; top: 100px; background: red;"></div> -->
-          <div class= 'labContainer'></div>
-          <button class= 'btn btn-primary' id= 'createDevice'>创建设备</button>
+            <div class= 'labContainer'></div>
+            <button class= 'btn btn-primary' id= 'createDevice'>创建设备</button>           
      </body>
 </html>

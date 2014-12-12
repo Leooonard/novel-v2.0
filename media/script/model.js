@@ -27,8 +27,30 @@
 	};
 
 	var novelModel= {
+		BaseLayer: function(){
+			this.setLayerInfo= function(){
+				alert("继承baseLayer的对象请自行实现setLayerInfo方法.");
+			};
+			this.getLayerInfo= function(){
+				alert("继承baseLayer的对象请自行实现getLayerInfo方法.");
+			}
+		},
 
-		physicalLayer: function(){
+		NameLayer: function(){
+			var nameLayerInfo= {
+				"name": false
+			};
+
+			this.setLayerInfo= function(info){
+				nameLayerInfo.name= info.name? info.name.toString(): false;
+			}
+
+			this.getLayerInfo= function(){
+				return nameLayerInfo;
+			};
+		},
+
+		PhysicalLayer: function(){
 			/*
 				物理层将不集成到设备中, 物理层将集成到网线中.
 				物理层可以选择物理层种类, 物理层的带宽, 传播延迟.
@@ -61,7 +83,7 @@
 			};
 		},
 
-		networkLayer: function(){
+		NetworkLayer: function(){
 			/*
 				网络层将集成到设备中. 网络层目前将默认使用主流的IPv4协议.(IPv6协议可以考虑后期加入)
 				网络层对于不同的设备将由不同的数据结构存储, 可分为主机设备, 路由设备两种.
@@ -128,12 +150,12 @@
 				};
 			};
 
-
-		},	
-		Segement: function(){
-			var typeDict= {
-				"cable": CreateCableSegement
+			this.createRouteIPv4NetworkLayer= function(){
+				return new routeIPv4NetworkLayer();
 			};
+		},	
+
+		Segement: function(){
 			var cableSegement= function(){
 				var ID= undefined;
 				var type= "cable";
@@ -148,25 +170,33 @@
 					return type;
 				};
 			};
-			this.CreateCableSegement= function(){
+			var CreateCableSegement= function(){
 				return new cableSegement();
 			};
-			this.CreateViewByType= function(type){
+			this.CreateModelByType= function(type){
 			    var initFunction= typeDict[type]; //获取对应的构造函数.
 			    if(initFunction){
 			        return initFunction();
 			    }
 			    return false;
 			};
+			var typeDict= {
+				"cable": CreateCableSegement
+			};
 		},
 
 		Device: function(){
 			var ID= undefined; //唯一的ID号, 唯一的标示. 字符串类型.
 			var type= '设备';
-			var networkLayer= {
-				"physicalLayer": false,
-				"networkLayer": false
-			};
+
+			//是一个容器, 表示该视图对象使用了七层网络协议中的哪几层部件.
+            //初始值为全false, 等于全空.
+            //暂时只实现物理层, 网络层.
+            var networkLayer= {
+            	"nameLayer": false,
+                "physicalLayer": false,
+                "networkLayer": false
+            };
 
 			this.setID= function(id){
 				/*
@@ -203,29 +233,40 @@
             };
 
 			this.getLayerInfo= function(){
-
+				var info= {};
+				for(layer in networkLayer){
+					if(networkLayer.hasOwnProperty(layer)&& networkLayer[layer]){
+						info[layer]= networkLayer[layer].getLayerInfo();
+					}
+				}
+				return info;
 			};
 
 			this.setLayerInfo= function(info){
-
-			};
-
-			this.getModelInfo= function(){
-				/*
-					该函数返回设备模型所支持的网络信息组件.
-					返回的数据结构为: 最外层数组(能够分别先后显示顺序), 数组元素为对象(能够区分是哪种组件),
-					对象内的值为数组(所记录的具体网络信息集合), 数组内的元素为对象(记录了具体的网络信).
-				*/
-				return [
-					{
-						portInfo: portArray 
-					},
-					{
-						routeTableInfo: routeTableArray
+				for(layer in info){
+					if(info.hasOwnProperty(layer)){
+						networkLayer[layer].setLayerInfo(info[layer]);
 					}
-				];
+				}
 			};
 		},
+
+		createStaticIPv4Route: function(){
+			var device= new this.Device();
+			var nameLayer= new this.NameLayer();
+			var staticIPv4RouteNetworkLayer= new this.NetworkLayer().createRouteIPv4NetworkLayer();
+
+			device.extendNetworkLayer({
+				"nameLayer": nameLayer,
+				"networkLayer": staticIPv4RouteNetworkLayer
+			});
+
+			return device;
+		}
 	};
+
+	novelModel.NameLayer.prototype= new novelModel.BaseLayer();
+	novelModel.PhysicalLayer.prototype= new novelModel.BaseLayer();
+	novelModel.NetworkLayer.prototype= new novelModel.BaseLayer();
 	window.novelModel= novelModel;
 })();

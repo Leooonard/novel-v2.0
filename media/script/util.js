@@ -13,17 +13,21 @@
 				var seed= Math.random(); //一个在0-1内的值. 随机ID号种子. [0, 1)
 				var length= 10; //决定随机ID号的最大长度. 
 				var randomNumber= parseInt(seed* Math.pow(10, length));
+				var Continue= false; //小写的continue是关键字...  只能首字母大写.
 				randomNumber= randomNumber.toString(); //转成字符串格式.
 
 				//与已经存在的ID号进行比较. 如果存在相同的, 则重新生成新的随机字符串.
 				for(var i= 0; i< IDArray.length; i++){
 					if(randomNumber== IDArray[i]){
-						continue;
+						Continue= true;
+						break;
 					}
 				}
 
-				//生成了唯一的ID号字符串, 可以使用, 返回该字符串.
-				return randomNumber;
+				if(!Continue){
+					//生成了唯一的ID号字符串, 可以使用, 返回该字符串.
+					return randomNumber;
+				}
 			}
 		},
 		registerID: function(ID, IDArray){
