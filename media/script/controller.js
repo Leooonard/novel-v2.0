@@ -29,7 +29,7 @@
     var rightClickPointer= undefined; //这个对象存放了当鼠标右击设备时的坐标.
 
 
-    var InterfaceForView= function(){
+    var InterfaceForDeviceView= function(){
         /*
             这个接口对象用于提供给设备视图. 使设备视图能够调用controller的某些功能.
         */
@@ -303,6 +303,9 @@
                 return false;
             }
 
+            //禁用view的click事件. 也就是, 该设备能够拖动, 缩放, 但不能点击.
+            ...
+
             var $dialog= CreateFloatDetailedInfoDialog(); //建立对话框.          
 
             //通过调用接口获取html元素, 该元素可以直接放入对话框中.
@@ -485,6 +488,65 @@
         };
     };
 
+    var InterfaceForSegementView= function(){
+        this.segementClickCallback= function(ID){
+            /*
+                当线段在有效区域内受到点击时, 需要显示配置界面.
+                由于配置界面需要获取相对应的model中的信息. 所以需要通过controller进行流程.
+
+                需要禁用对象的click绑定, 防止多次调用.
+            */
+
+            //先找到相应的设备模型.
+            var model= undefined;
+            for(var i= 0; i< deviceModelArray.length; i++){
+                if(deviceModelArray[i].compareID(ID)){
+                    model= deviceModelArray[i];
+                    break;
+                }
+            }
+            if(model== undefined){ //没找到则出错, 退出.
+                return false;
+            }
+
+            //再找到相应的设备视图.
+            var view= undefined;
+            for(var i= 0; i< deviceViewArray.length; i++){
+                if(deviceViewArray[i].compareID(ID)){
+                    view= deviceViewArray[i];
+                    break;
+                }
+            }
+            if(view== undefined){
+                return false;
+            }
+
+            var $dialog= CreateFloatDetailedInfoDialog(); //建立对话框.          
+
+            //通过调用接口获取html元素, 该元素可以直接放入对话框中.
+            var info= model.getLayerInfo();
+            view.setLayerInfo(info);
+            var $viewInfo= view.getViewInfo();
+
+            $dialog.config({
+                "title": view.getViewName(),
+                "body": $viewInfo,
+                "functionalBtnText": "保存",
+                "functionalBtnCallback": function(){
+                    var info= view.getLayerInfo();
+                    view.updateViewName(); //更新小图标上的名字.
+                    $dialog.config({
+                        "title": view.getViewName()
+                    });
+                    model.setLayerInfo(info);
+                }
+            });
+
+
+            buttonToggle(); //这个很重要!!!
+        };
+    };
+
     var isDeviceWithSegement= function(ID){
         /*
             测试一个设备是否与线段相连接.
@@ -583,7 +645,7 @@
 
             //这里将接口对象直接传递给设备视图. 视图是否使用由视图具体需要实现哪些功能决定.
             if(view.registerControllerInterface){ //如果实现了该函数则传递.
-                view.registerControllerInterface(new InterfaceForView());
+                view.registerControllerInterface(new InterfaceForDeviceView());
             }
 
             deviceModelArray.push(model);

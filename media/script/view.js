@@ -1126,6 +1126,11 @@
                     updateCanvas();
                 };
 
+                var ControllerInterface= undefined;
+                this.registerControllerInterface= function(interface){
+                    ControllerInterface= interface;
+                };
+
                 this.bindEvent= function(){
                     /*
                         这个函数主要用于绑定线段的事件函数.
@@ -1182,7 +1187,7 @@
                             $htmlView.unbind("click"); //有重复注册的现象. 暂时使用这个方法解决.
                             $htmlView.click(function(e){
                                 //...
-                                alert("点击到了!");
+                                ControllerInterface.
                                 return false;
                             });
 
