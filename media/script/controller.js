@@ -196,7 +196,6 @@
                 // 2
                 view.unbindViewMouseEnter();
                 view.unbindViewMouseLeave();
-                view.unbindViewClick();
             };
 
             var restoreEvent= function(){
@@ -217,8 +216,9 @@
 
                 view.restoreViewMouseEnter();
                 view.restoreViewMouseLeave();
-                if(restoreClick){
-                    view.restoreViewClick();
+                if(!restoreClick){
+                    //移动了, 解绑click.
+                    view.unbindViewClick();
                 }
 
                 $labContainer.unbind("mousemove");
@@ -304,7 +304,7 @@
             }
 
             //禁用view的click事件. 也就是, 该设备能够拖动, 缩放, 但不能点击.
-            ...
+            view.disableClick();
 
             var $dialog= CreateFloatDetailedInfoDialog(); //建立对话框.          
 
@@ -433,8 +433,8 @@
                         保留该线段的操作.
                         1. 先调整位置.
                         2. 为线段申请ID.
-                        3. 为线段绑定事件.
-                        4. 创建线段模型对象.
+                        3. 为线段绑定事件, 添加各层网络对象, 添加回调对象.
+                        4. 创建线段模型对象..
                         5. 添加线段至列表.
                         6. 为线段添加与设备的映射关系. (当设备删除时, 线段删除时, 设备移动时都需使用该映射关系)
                     */
@@ -462,6 +462,7 @@
 
                     // 3
                     $temporarySeg.bindEvent();
+                    $temporarySeg.registerControllerInterface(new InterfaceForSegementView());
 
                     // 4
                     var model= createSegementModel($temporarySeg);
@@ -499,9 +500,9 @@
 
             //先找到相应的设备模型.
             var model= undefined;
-            for(var i= 0; i< deviceModelArray.length; i++){
-                if(deviceModelArray[i].compareID(ID)){
-                    model= deviceModelArray[i];
+            for(var i= 0; i< segModelArray.length; i++){
+                if(segModelArray[i].compareID(ID)){
+                    model= segModelArray[i];
                     break;
                 }
             }
@@ -511,15 +512,17 @@
 
             //再找到相应的设备视图.
             var view= undefined;
-            for(var i= 0; i< deviceViewArray.length; i++){
-                if(deviceViewArray[i].compareID(ID)){
-                    view= deviceViewArray[i];
+            for(var i= 0; i< segViewArray.length; i++){
+                if(segViewArray[i].compareID(ID)){
+                    view= segViewArray[i];
                     break;
                 }
             }
             if(view== undefined){
                 return false;
             }
+
+            view.disableClick();
 
             var $dialog= CreateFloatDetailedInfoDialog(); //建立对话框.          
 
@@ -541,7 +544,6 @@
                     model.setLayerInfo(info);
                 }
             });
-
 
             buttonToggle(); //这个很重要!!!
         };

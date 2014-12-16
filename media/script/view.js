@@ -588,6 +588,10 @@
             var ID= undefined; //唯一的标示符.
             var viewName= "设备";
 
+            //该变量决定视图能否被单击. 在现在的设计中, 只有一种情况无法被单击.
+            //即已经被单击过, 对话框被调出, 并未被关闭.
+            var clickEnabled= true; 
+
             //是一个容器, 表示该视图对象使用了七层网络协议中的哪几层部件.
             //初始值为全false, 等于全空.
             //暂时只实现物理层, 网络层.
@@ -779,9 +783,11 @@
                 var $this= $(this);
                 var event= e|| window.event;
 
-                if(event.which=== 1){
-                    //左键点击事件.
-                    ControllerInterface.deviceClickCallback(ID);
+                if(clickEnabled){
+                    if(event.which=== 1){
+                        //左键点击事件.
+                        ControllerInterface.deviceClickCallback(ID);
+                    }
                 }
 
                 $this.unbind("click");
@@ -836,6 +842,14 @@
 
             this.unbindMouseUp= function(){
                 $htmlView.unbind("mouseup");
+            };
+
+            this.disableClick= function(){
+                clickEnabled= false;
+            };
+
+            this.enableClick= function(){
+                clickEnabled= true;
             };
 
             this.scale= function(e){
@@ -916,6 +930,7 @@
                 var ID= undefined;
                 var viewName= undefined;
                 var type= "cable";
+                var clickEnabled= true;
 
                 //通过矩形对角顶点的两组坐标, 可以计算出矩形的左上角坐标, 矩形的高宽. 即线段容器的位置, 长宽信息.
                 var originX= undefined, originY= undefined; //两个变量记录了视图的初始位置信息.
@@ -1149,10 +1164,11 @@
                     var state= false; //确定鼠标是否在范围内.
                     if(isInZone(parseInt(event.pageX), parseInt(event.pageY))){ //在范围内, 需要改变样式. 并监听点击事件.
                         state= true;
-
+                        $htmlView.unbind("click"); //有重复注册的现象. 暂时使用这个方法解决.
                         $htmlView.click(function(e){
-                            //...
-                            alert("点击到了!");
+                            if(clickEnabled){
+                                ControllerInterface.segementClickCallback(ID);
+                            }
                             return false;
                         });
 
@@ -1186,8 +1202,9 @@
                             state= true;
                             $htmlView.unbind("click"); //有重复注册的现象. 暂时使用这个方法解决.
                             $htmlView.click(function(e){
-                                //...
-                                ControllerInterface.
+                                if(clickEnabled){
+                                    ControllerInterface.segementClickCallback(ID);
+                                }
                                 return false;
                             });
 
@@ -1221,6 +1238,14 @@
 
                 this.restoreViewMouseLeave= function(){
                     $htmlView.mouseleave(mouseLeave);
+                };
+
+                this.disableClick= function(){
+                    clickEnabled= false;
+                };
+
+                this.enableClick= function(){
+                    clickEnabled= true;
                 };
             };
 
