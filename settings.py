@@ -92,7 +92,6 @@ STATICFILES_FINDERS = (
 SECRET_KEY = 'x*ttw#jzrzmxghxe@$bqj6ku30d=5d#1dbk*46_l8f)caq*hnk'
 
 
-PROJECT_PATH = os.path.dirname(__file__).replace("\\", "/")
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -110,6 +109,9 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'urls'
+
+
+PROJECT_PATH = os.path.dirname(__file__).replace("\\", "/")
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
