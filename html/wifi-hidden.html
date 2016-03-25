@@ -1,0 +1,31 @@
+<html>
+   <head>
+      <title>虚拟网络实验室，终端隐藏实验</title>
+      <meta charset = "utf-8">
+      <link rel="stylesheet" type="text/css" href="../css/bootstrap/dist/css/bootstrap.css">
+      <link rel="stylesheet" type="text/css" href="../css/board.css">
+      <link rel="stylesheet" type="text/css" href="../css/vn.css">
+      <script type="text/javascript" src = "../js/jquery.js"></script>
+      <script src = "../js/wifi-hidden/wifi-hidden-pd.js"></script>
+   </head>
+   <body>
+      <div id = "experimentBoard" class="experimentBoard"></div>
+      <div class="controlBoard">
+         <button id = "startExperiment" class = "btn btn-primary">开始实验</button>
+         <button id = "saveExperiment" class="btn btn-info">保存实验</button>
+         <button id = "loadExperiment" class="btn btn-info">读取实验</button>
+      </div>
+      <div class="resultBoard">
+         <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#resultPanel" aria-controls="resultPanel" role="tab" data-toggle="tab">结果</a></li>
+            <li role="presentation"><a href="#pcapPanel" aria-controls="pcapPanel" role="tab" data-toggle="tab">pcap</a></li>
+            <li role="presentation"><a href="#tracePanel" aria-controls="tracePanel" role="tab" data-toggle="tab">trace</a></li>
+         </ul>
+         <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="resultPanel"></div>
+            <div role="tabpanel" class="tab-pane" id="pcapPanel"></div>
+            <div role="tabpanel" class="tab-pane" id="tracePanel"></div>
+         </div>
+      </div>
+   </body>
+</html>

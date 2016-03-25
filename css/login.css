@@ -1,0 +1,103 @@
+ul{
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+}
+
+.header{
+	padding: 50px;
+}
+
+.header li{
+	line-height: 30px;
+}
+
+.header h1{
+	font-size: 60px;
+}
+
+.header a{
+	font-size: 20px;
+	line-height: 30px;
+	padding-left: 60px;
+}
+
+.header p{
+	font-size: 20px;
+	line-height: 30px;
+	height: 30px;
+	padding-left: 60px;
+}
+
+.input-wrapper{
+	padding-top: 100px;
+}
+
+.control-label{
+	font-size: 18px;
+}
+
+#loginInfo{
+	font-size: 18px;
+	font-weight: bold;
+	color: #333;
+	padding-left: 30px;
+	display: none;
+}
+
+.form-control{
+	border: none;
+	box-shadow: none;
+	border-bottom: solid 4px gray;
+	border-radius: 0px;
+}
+
+.form-control:focus{
+	border: none;
+	box-shadow: none;
+	border-bottom: solid 4px gray;
+	border-radius: 0px;
+}
+
+.btn-default, .btn-default:hover{
+	background-color: gray;
+	color: white;
+	font-size: 18px;
+	border-radius: 8px;
+}
+
+.errorTip{
+	font-weight: bolder;
+	color: gray;
+	font-size: 16px;
+}
+
+.device{
+	width: 50px;
+	height: 50px;
+	text-align: center;
+	line-height: 50px;
+	box-shadow: 0px 0px 3px 3px gray;
+	font-size: 14px;
+	color: gray;
+	border-radius: 5px;
+}
+
+.wave{
+	width: 40px;
+	height: 20px;
+	border-radius: 40px / 20px;
+	border: solid 2px gray;
+	background-color: gray;
+	position: absolute;
+	left: 50px;
+	top: 16px;
+}
+
+#wave1{
+	left: -15px;
+}
+
+#wave2{
+	left: -90px;
+}
