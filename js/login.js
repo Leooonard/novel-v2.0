@@ -10,6 +10,7 @@ $(function() {
          "id": $idInput.val(),
          "password": $passwordInput.val(),
       }).done(function(response){
+         alert(typeof response)
          if(!!response.ok){
             $loginForm.css("display", "none")
             $loginInfo.css("display", "block")
