@@ -6,11 +6,11 @@ $(function() {
       var $errorTip = $("#errorTip")
       var $loginForm = $("#loginForm")
       var $loginInfo = $("#loginInfo")
-      $.post("./dologin", {
+      $.post("/mysite/dologin", {
          "id": $idInput.val(),
          "password": $passwordInput.val(),
       }).done(function(response){
-         alert(typeof response)
+         response = JSON.parse(response)
          if(!!response.ok){
             $loginForm.css("display", "none")
             $loginInfo.css("display", "block")
