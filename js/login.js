@@ -10,6 +10,7 @@ $(function() {
          "id": $idInput.val(),
          "password": $passwordInput.val(),
       }).done(function(response){
+         console.log(response)
          response = JSON.parse(response)
          if(!!response.ok){
             $loginForm.css("display", "none")
