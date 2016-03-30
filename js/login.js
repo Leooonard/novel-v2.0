@@ -6,7 +6,7 @@ $(function() {
       var $errorTip = $("#errorTip")
       var $loginForm = $("#loginForm")
       var $loginInfo = $("#loginInfo")
-      $.post("./login", {
+      $.post("./dologin", {
          "id": $idInput.val(),
          "password": $passwordInput.val(),
       }).done(function(response){
