@@ -73,14 +73,50 @@
 	
 	   var $startExperiment = $("#startExperiment");
 	   $startExperiment.on("click", function () {
-	      console.log(_Manager.Manager.exportData());
+	      var data = _Manager.Manager.exportData();
+	      var dataString = JSON.stringify(data);
+	      var url = "./aodvStartExperiment";
+	      $.post(url, dataString).done(function (response) {
+	         if (!!response.ok) {
+	            alert("执行成功");
+	            var resultArray = response.result;
+	            var $resultPanel = $("#resultPanel");
+	            for (var i = 0; i < resultArray.length; i++) {
+	               var result = resultArray[i];
+	               var $result = $("<p></p>");
+	               $result.text(result);
+	               $resultPanel.append($result);
+	            }
+	            var pcapArray = response.pcap;
+	            var $pcapPanel = $("#pcapPanel");
+	            for (var _i = 0; _i < pcapArray.length; _i++) {
+	               var pcap = pcapArray[_i];
+	               var $pcap = $("<a></a>");
+	               $pcap.text(_i + 1 + ".下载");
+	               $pcap.attr("href", pcap);
+	               $pcapPanel.append($pcap);
+	            }
+	            var traceArray = response.trace;
+	            var $tracePanel = $("#tracePanel");
+	            for (var _i2 = 0; _i2 < traceArray.length; _i2++) {
+	               var trace = traceArray[_i2];
+	               var $trace = $("<p></p>");
+	               $trace.text(trace);
+	               $tracePanel.append($trace);
+	            }
+	         } else {
+	            alert("执行失败");
+	         }
+	      }).fail(function () {
+	         alert("执行失败");
+	      });
 	   });
 	
 	   var $saveExperiment = $("#saveExperiment");
 	   $saveExperiment.on("click", function () {
 	      var data = _Manager.Manager.exportData();
 	      var dataString = JSON.stringify(data);
-	      var url = "./saveExperiment";
+	      var url = "./aodvSaveExperiment";
 	      $.post(url, dataString).done(function (response) {
 	         if (!!response.ok) {
 	            alert("保存成功");
@@ -94,7 +130,7 @@
 	
 	   var $loadExperiment = $("#loadExperiment");
 	   $loadExperiment.on("click", function () {
-	      var url = "./loadExperiment";
+	      var url = "./aodvLoadExperiment";
 	      $.get(url).done(function (response) {
 	         if (!!response.ok) {
 	            alert("保存成功");
